@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-polaris-bg text-polaris-text font-sans overflow-hidden antialiased selection:bg-polaris-accent selection:text-polaris-text;
+        /* Abstract Background Gradient */
+        background-image:
+            radial-gradient(circle at 0% 0%, rgba(203, 191, 175, 0.4) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(138, 128, 119, 0.2) 0%, transparent 50%);
+    }
+}
+
+@layer components {
+    /* Automatic Glass Application */
+
+    /* Buttons */
+    button,
+    .btn {
+        @apply glass-button rounded-full px-8 py-4 font-bold tracking-wide uppercase;
+    }
+
+    /* Secondary Button Variant */
+    .btn-secondary {
+        @apply bg-transparent border-2 border-polaris-primary text-polaris-primary shadow-none hover:bg-polaris-primary/10;
+        backdrop-filter: none;
+    }
+
+    /* Cards & Panels */
+    .card,
+    .panel {
+        @apply glass-subtle rounded-3xl p-6;
+    }
+
+    /* Modals & Overlays */
+    .modal,
+    .overlay {
+        @apply glass-intense rounded-3xl shadow-2xl;
+    }
+
+    /* Controls & Bars */
+    .control,
+    .bar {
+        @apply glass rounded-2xl;
+    }
+
+    /* Inputs */
+    input,
+    select {
+        @apply glass-subtle rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-polaris-primary/50;
+    }
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
