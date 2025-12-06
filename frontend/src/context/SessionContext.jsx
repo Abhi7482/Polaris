@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 const SessionContext = createContext();
 
@@ -10,7 +11,7 @@ export const SessionProvider = ({ children }) => {
 
     const startSession = async () => {
         try {
-            const res = await axios.post('http://localhost:8000/session/start');
+            const res = await axios.post(`${API_URL}/session/start`);
             setSessionId(res.data.session_id);
             setPhotos([]);
             return true;
@@ -22,7 +23,7 @@ export const SessionProvider = ({ children }) => {
 
     const resetSession = async () => {
         try {
-            await axios.post('http://localhost:8000/session/reset');
+            await axios.post(`${API_URL}/session/reset`);
             setSessionId(null);
             setPhotos([]);
             setOptions({ filter: 'color', frame: 'default' });
@@ -34,7 +35,7 @@ export const SessionProvider = ({ children }) => {
     const updateOptions = async (newOptions) => {
         setOptions(prev => ({ ...prev, ...newOptions }));
         try {
-            await axios.post('http://localhost:8000/session/options', {
+            await axios.post(`${API_URL}/session/options`, {
                 filter_type: newOptions.filter,
                 frame_id: newOptions.frame
             });

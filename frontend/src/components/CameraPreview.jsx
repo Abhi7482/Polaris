@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import API_URL from '../config';
 
 const CameraPreview = ({ isCapturing }) => {
-    const [streamUrl, setStreamUrl] = useState("http://localhost:8000/camera/stream");
+    const [streamUrl, setStreamUrl] = useState(`${API_URL}/camera/stream`);
     const [error, setError] = useState(false);
 
     const handleError = () => {

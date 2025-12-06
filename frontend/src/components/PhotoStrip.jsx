@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import API_URL from '../config';
 
 const PhotoStrip = ({ photos = [], template = null }) => {
     // 4 slots for photos
@@ -14,7 +15,7 @@ const PhotoStrip = ({ photos = [], template = null }) => {
                         <motion.img
                             initial={{ opacity: 0, scale: 1.1 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            src={`http://localhost:8000/${photos[index]}`}
+                            src={`${API_URL}/${photos[index]}`}
                             className="w-full h-full object-cover"
                         />
                     ) : (

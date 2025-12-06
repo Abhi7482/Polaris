@@ -4,6 +4,7 @@ import PhotoStrip from '../components/PhotoStrip';
 import Button from '../components/Button';
 import { useSession } from '../context/SessionContext';
 import axios from 'axios';
+import API_URL from '../config';
 
 const Review = () => {
     const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Review = () => {
     useEffect(() => {
         const processStrip = async () => {
             try {
-                const res = await axios.post('http://localhost:8000/process');
+                const res = await axios.post(`${API_URL}/process`);
                 setProcessedPath(res.data.path);
             } catch (err) {
                 console.error("Processing failed", err);
@@ -24,7 +25,7 @@ const Review = () => {
 
     const handlePrint = async () => {
         try {
-            await axios.post('http://localhost:8000/print');
+            await axios.post(`${API_URL}/print`);
             navigate('/printing');
         } catch (err) {
             console.error("Print failed", err);

@@ -5,6 +5,7 @@ import PhotoStrip from '../components/PhotoStrip';
 import Countdown from '../components/Countdown';
 import { useSession } from '../context/SessionContext';
 import axios from 'axios';
+import API_URL from '../config';
 
 const Capture = () => {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ const Capture = () => {
         setIsCapturing(true);
 
         try {
-            const res = await axios.post('http://localhost:8000/capture');
+            const res = await axios.post(`${API_URL}/capture`);
             if (res.data.status === 'captured') {
                 addPhoto(res.data.path);
                 setShotCount(prev => prev + 1);
