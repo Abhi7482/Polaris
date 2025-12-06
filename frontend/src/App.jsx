@@ -7,6 +7,7 @@ import Options from './pages/Options';
 import Capture from './pages/Capture';
 import Review from './pages/Review';
 import Printing from './pages/Printing';
+import Policies from './pages/Policies';
 
 function App() {
     return (
@@ -19,6 +20,7 @@ function App() {
                     <Route path="/capture" element={<Capture />} />
                     <Route path="/review" element={<Review />} />
                     <Route path="/printing" element={<Printing />} />
+                    <Route path="/policies" element={<Policies />} />
                 </Routes>
             </Router>
         </SessionProvider>
