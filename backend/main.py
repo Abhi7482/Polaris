@@ -6,10 +6,10 @@ from pydantic import BaseModel
 import cv2
 import os
 import logging
-from .camera import CameraService
-from .printer import PrinterService
-from .processor import ImageProcessor
-from .state import StateManager
+from camera import CameraService
+from printer import PrinterService
+from processor import ImageProcessor
+from state import StateManager
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -122,8 +122,12 @@ async def process_photos():
         raise HTTPException(status_code=400, detail="Session incomplete")
     
     output_path = f"prints/{session.session_id}_final.jpg"
-    # TODO: Pass actual template path based on frame_id
-    result_path = processor.create_strip(session.photos, output_path=output_path, filter_type=session.selected_filter)
+    result_path = processor.create_strip(
+        session.photos, 
+        output_path=output_path, 
+        filter_type=session.selected_filter,
+        frame_id=session.selected_frame
+    )
     
     if result_path:
         return {"status": "processed", "path": result_path}
@@ -143,4 +147,36 @@ async def print_strip(background_tasks: BackgroundTasks):
     
     background_tasks.add_task(printer.print_image, print_path)
     return {"status": "printing_started"}
+
+# Payment Integration
+from payment import PhonePeService
+payment_service = PhonePeService()
+
+class PaymentRequest(BaseModel):
+    amount: int # in paise
+    redirect_url: str
+
+@app.post("/pay/initiate")
+async def initiate_payment(request: PaymentRequest):
+    # Callback URL - In production this should be your public server URL
+    # For local dev, we might not get callbacks, so we rely on redirect or polling
+    callback_url = "https://polaris7482.netlify.app/payment/callback" 
+    
+    response = payment_service.initiate_payment(request.amount, callback_url, request.redirect_url)
+    if response and response.get("success"):
+        return {
+            "status": "initiated",
+            "url": response["data"]["instrumentResponse"]["redirectInfo"]["url"],
+            "transactionId": response["data"]["merchantTransactionId"]
+        }
+    else:
+        raise HTTPException(status_code=500, detail="Payment initiation failed")
+
+@app.get("/pay/status/{transaction_id}")
+async def check_payment_status(transaction_id: str):
+    response = payment_service.check_status(transaction_id)
+    if response:
+        return response
+    else:
+        raise HTTPException(status_code=500, detail="Status check failed")
 

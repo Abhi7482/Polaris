@@ -1,6 +1,7 @@
 import win32print
 import win32ui
 import win32con
+import win32gui
 from PIL import Image, ImageWin
 import logging
 
@@ -23,11 +24,23 @@ class PrinterService:
             # Fallback to default printer if specific one not found
             printer_name = win32print.GetDefaultPrinter()
             logger.warning(f"Target printer not found, using default: {printer_name}")
-
+            
         try:
             hDC = win32ui.CreateDC()
             hDC.CreatePrinterDC(printer_name)
             
+            # Get printer DPI
+            logpixelsx = hDC.GetDeviceCaps(win32con.LOGPIXELSX)
+            logpixelsy = hDC.GetDeviceCaps(win32con.LOGPIXELSY)
+            
+            # Target size: 2x6 inches
+            # Calculate target pixels based on DPI
+            target_width = int(2 * logpixelsx)
+            target_height = int(6 * logpixelsy)
+            
+            logger.info(f"Printer DPI: {logpixelsx}x{logpixelsy}")
+            logger.info(f"Printing size: {target_width}x{target_height} pixels (2x6 inches)")
+
             bmp = Image.open(image_path)
             if bmp.mode != "RGB":
                 bmp = bmp.convert("RGB")
@@ -37,14 +50,10 @@ class PrinterService:
 
             dib = ImageWin.Dib(bmp)
             
-            # Get printable area
-            horzres = hDC.GetDeviceCaps(win32con.HORZRES)
-            vertres = hDC.GetDeviceCaps(win32con.VERTRES)
-            
-            # Scale image to fit page (simple fit)
-            # For photostrips, we might want specific scaling
-            
-            dib.draw(hDC.GetHandleOutput(), (0, 0, horzres, vertres))
+            # Draw image to specific 2x6 inch area at (0,0)
+            # This ensures that if 2x6 paper is loaded, it prints on it.
+            # If Letter paper is loaded, it prints in the top-left corner.
+            dib.draw(hDC.GetHandleOutput(), (0, 0, target_width, target_height))
 
             hDC.EndPage()
             hDC.EndDoc()

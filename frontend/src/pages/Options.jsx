@@ -53,6 +53,7 @@ const Options = () => {
                         <TemplateSelector
                             selected={options.frame}
                             onSelect={(id) => updateOptions({ frame: id })}
+                            filterType={options.filter}
                         />
                     </div>
                 </div>

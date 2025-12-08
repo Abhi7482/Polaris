@@ -1,17 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const templates = [
-    { id: 'default', name: 'Classic White', color: '#ffffff' },
-    { id: 'urban', name: 'Urban Espresso', color: '#5B4A3E' },
-    { id: 'oat', name: 'Luxe Oat', color: '#CBBFAF' },
-    { id: 'pavement', name: 'Pavement', color: '#8A8077' },
-];
+const templates = {
+    color: [
+        { id: 'regular', name: 'Regular', color: '#FFD700' }, // Gold/Yellow for Color
+        { id: 'vintage', name: 'Vintage', color: '#FF6347' }, // Tomato for Vintage Color
+    ],
+    bw: [
+        { id: 'regular', name: 'Regular', color: '#808080' }, // Grey for BW
+        { id: 'vintage', name: 'Vintage', color: '#000000' }, // Black for Vintage BW
+    ]
+};
 
-const TemplateSelector = ({ selected, onSelect }) => {
+const TemplateSelector = ({ selected, onSelect, filterType = 'color' }) => {
+    const currentTemplates = templates[filterType] || templates.color;
+
     return (
         <div className="flex gap-6 overflow-x-auto p-4 no-scrollbar">
-            {templates.map((t) => (
+            {currentTemplates.map((t) => (
                 <motion.div
                     key={t.id}
                     whileTap={{ scale: 0.95 }}

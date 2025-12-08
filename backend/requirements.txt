@@ -4,3 +4,4 @@ opencv-python
 Pillow
 pywin32
 python-multipart
+requests

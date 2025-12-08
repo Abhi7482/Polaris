@@ -6,7 +6,7 @@
 
 @layer base {
     body {
-        @apply bg-polaris-bg text-polaris-text font-sans overflow-hidden antialiased selection:bg-polaris-accent selection:text-polaris-text;
+        @apply bg-polaris-bg text-polaris-text font-sans antialiased selection:bg-polaris-accent selection:text-polaris-text;
         /* Abstract Background Gradient */
         background-image:
             radial-gradient(circle at 0% 0%, rgba(203, 191, 175, 0.4) 0%, transparent 50%),
