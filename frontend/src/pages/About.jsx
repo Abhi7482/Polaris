@@ -6,7 +6,7 @@ const About = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-polaris-bg text-polaris-text font-sans selection:bg-polaris-accent selection:text-polaris-text overflow-hidden relative">
+        <div className="min-h-screen bg-polaris-bg text-polaris-text font-sans selection:bg-polaris-accent selection:text-polaris-text relative">
             {/* Background Elements */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-polaris-accent/30 rounded-full blur-[120px] animate-pulse-slow"></div>
