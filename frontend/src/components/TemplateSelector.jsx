@@ -23,12 +23,16 @@ const TemplateSelector = ({ selected, onSelect, filterType = 'color' }) => {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onSelect(t.id)}
                     className={`
-            relative w-32 h-48 rounded-xl cursor-pointer flex-shrink-0 shadow-md transition-all
+            relative w-32 h-48 rounded-xl cursor-pointer flex-shrink-0 shadow-md transition-all overflow-hidden bg-gray-100
             ${selected === t.id ? 'ring-4 ring-polaris-primary ring-offset-2' : 'hover:shadow-xl'}
           `}
-                    style={{ backgroundColor: t.color }}
                 >
-                    <div className="absolute bottom-3 left-0 right-0 text-center text-xs font-bold text-polaris-text bg-white/90 mx-3 py-1 rounded-full shadow-sm">
+                    <img
+                        src={`/frames/${filterType}/${filterType}_${t.id}.png`}
+                        alt={t.name}
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-3 left-0 right-0 text-center text-xs font-bold text-polaris-text bg-white/90 mx-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
                         {t.name}
                     </div>
                 </motion.div>

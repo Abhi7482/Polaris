@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const Policies = () => {
+    const { hash } = useLocation();
+
+    useEffect(() => {
+        if (hash) {
+            // Find element by ID (e.g. "refund")
+            const element = document.getElementById(hash.replace('#', ''));
+            if (element) {
+                // slightly longer timeout to ensure full page render
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'auto', block: 'start' });
+                }, 300);
+            }
+        } else {
+            window.scrollTo(0, 0);
+        }
+    }, [hash]);
+
     return (
         <div className="min-h-screen bg-white text-gray-800 p-8 md:p-16 font-sans leading-relaxed">
             <div className="max-w-4xl mx-auto">
