@@ -207,11 +207,11 @@ const Welcome = () => {
                 </div>
 
                 {/* --- Footer Links --- */}
-                <motion.footer variants={itemVariants} className="pt-4 w-full text-center text-polaris-muted/70">
-                    <div className="flex justify-center gap-6 text-[10px] font-medium">
-                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">About</button>
-                        <span className="opacity-30">•</span>
-                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors">Policies</button>
+                <motion.footer variants={itemVariants} className="pt-2 w-full text-center text-polaris-muted/80">
+                    <div className="flex justify-center gap-8 text-xs font-semibold tracking-wide">
+                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors py-2 px-2">About</button>
+                        <span className="opacity-20 py-2">•</span>
+                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors py-2 px-2">Policies</button>
                     </div>
                 </motion.footer>
             </motion.div>
