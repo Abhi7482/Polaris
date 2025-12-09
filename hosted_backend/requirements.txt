@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-phonepe-sdk-python
 pydantic
 python-multipart
 requests
