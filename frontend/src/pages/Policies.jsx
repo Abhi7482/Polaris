@@ -23,7 +23,7 @@ const Policies = () => {
                         <p>By accessing this website and using our kiosk services, you agree to be bound by these terms:</p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li><strong>Service Usage:</strong> You agree to use the photobooth service for lawful purposes only.</li>
-                            <li><strong>Pricing:</strong> The service is charged at ₹200 per session. Prices are subject to change without prior notice.</li>
+                            <li><strong>Pricing:</strong> The service uses a tiered pricing model based on the number of prints selected: ₹200 for 2 strips, ₹300 for 3 strips, and ₹400 for 4 strips. Prices are subject to change without prior notice.</li>
                             <li><strong>Content:</strong> You acknowledge that the photos taken are for personal use. We are not responsible for the content of the photos captured by users.</li>
                             <li><strong>Liability:</strong> RAKSHITA R PATIL shall not be liable for any indirect, incidental, or consequential damages arising from the use of the service.</li>
                             <li><strong>Modifications:</strong> We reserve the right to modify these terms at any time.</li>
