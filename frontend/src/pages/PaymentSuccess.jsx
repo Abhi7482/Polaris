@@ -11,45 +11,68 @@ const PaymentSuccess = () => {
     const [status, setStatus] = useState('verifying');
 
     useEffect(() => {
+        let isMounted = true;
+        let attempts = 0;
+        const maxAttempts = 30; // 30 * 2s = 60 seconds timeout
+
         const verifyPayment = async () => {
             const transactionId = searchParams.get('merchantTransactionId');
             if (!transactionId) {
-                setStatus('error');
+                if (isMounted) setStatus('error');
                 return;
             }
 
             try {
-                // 1. Verify with Hosted Backend
+                // Poll the hosted backend
                 const res = await axios.get(`${HOSTED_API_URL}/order_status/${transactionId}`);
 
                 if (res.data.status === 'SUCCESS') {
-                    setStatus('success');
+                    if (isMounted) {
+                        setStatus('success');
 
-                    // 2. Trigger Local Session via Bridge
-                    if (window.polarisLocal && window.polarisLocal.startSession) {
-                        await window.polarisLocal.startSession(transactionId);
-                    } else {
-                        console.warn("Polaris Local Bridge not found. Running in web mode?");
-                        // Fallback for dev/web testing
-                        // startSession(); // From context
+                        // Trigger Local Session
+                        if (window.polarisLocal && window.polarisLocal.api) {
+                            // Use the generic API bridge we created
+                            await window.polarisLocal.api('start_session', {
+                                id: transactionId,
+                                copies: res.data.copies || 1
+                            });
+                        } else if (window.polarisLocal && window.polarisLocal.startSession) {
+                            // Legacy fallback
+                            await window.polarisLocal.startSession(transactionId);
+                        } else {
+                            console.warn("Polaris Local Bridge not found.");
+                        }
+
+                        // Delay for UX then navigate
+                        setTimeout(() => navigate('/options'), 2000);
                     }
-
-                    // 3. Navigate to Options (Frame Selection)
-                    // Add a small delay for UX
-                    setTimeout(() => {
-                        navigate('/options');
-                    }, 2000);
-
+                } else if (res.data.status === 'FAILED') {
+                    if (isMounted) setStatus('failed');
                 } else {
-                    setStatus('failed');
+                    // Still PENDING, retry
+                    if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(verifyPayment, 2000); // Retry in 2s
+                    } else {
+                        if (isMounted) setStatus('timeout');
+                    }
                 }
             } catch (err) {
-                console.error("Verification failed", err);
-                setStatus('error');
+                console.error("Verification pending/failed", err);
+                // If 404 or network error, retry anyway (might be backend cold start)
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(verifyPayment, 2000);
+                } else {
+                    if (isMounted) setStatus('error');
+                }
             }
         };
 
         verifyPayment();
+
+        return () => { isMounted = false; };
     }, [searchParams, navigate]);
 
     return (

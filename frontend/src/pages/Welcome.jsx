@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
 import { Sparkles, ArrowRight, Camera, Zap } from 'lucide-react';
+import axios from 'axios';
+import { HOSTED_API_URL } from '../config';
 
 const Welcome = () => {
     const navigate = useNavigate();
@@ -13,6 +15,19 @@ const Welcome = () => {
     const [showPinModal, setShowPinModal] = useState(false);
     const [pin, setPin] = useState('');
     const [logoClicks, setLogoClicks] = useState(0);
+
+    // Wake up hosted backend on mount
+    React.useEffect(() => {
+        const wakeUpBackend = async () => {
+            try {
+                await axios.get(HOSTED_API_URL);
+                console.log("Backend Awake");
+            } catch (e) {
+                console.log("Waking backend...");
+            }
+        };
+        wakeUpBackend();
+    }, []);
 
     const handleLogoClick = () => {
         setLogoClicks(prev => prev + 1);
@@ -90,6 +105,9 @@ const Welcome = () => {
                         <span className="text-[10px] uppercase tracking-widest font-bold">THE DIGITAL PHOTOBOOTH</span>
                     </div>
                     {/* Brand name is now just POLARIS */}
+                    <div className="text-[10px] sm:text-xs font-semibold text-polaris-muted tracking-widest uppercase">
+                        RAKSHITA R PATIL
+                    </div>
                     <h1
                         onClick={handleLogoClick}
                         className="text-5xl sm:text-6xl font-black tracking-tighter text-polaris-primary leading-tight cursor-default select-none active:scale-95 transition-transform"
