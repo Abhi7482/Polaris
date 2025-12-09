@@ -1,3 +1,4 @@
+```
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -51,8 +52,8 @@ const Welcome = () => {
     // Stagger animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
+        visible: { 
+            opacity: 1, 
             transition: { staggerChildren: 0.1, delayChildren: 0.2 }
         }
     };
@@ -65,7 +66,7 @@ const Welcome = () => {
     return (
         // Adjusted padding for better fit on 1080p height
         <div className="relative h-screen w-full flex flex-col items-center justify-center py-4 px-4 overflow-hidden font-sans">
-
+            
             {/* --- Background Elements & Grain (Using existing glass-panel definition) --- */}
             <div className="bg-noise" />
             <div className="absolute inset-0 overflow-hidden -z-10">
@@ -74,7 +75,7 @@ const Welcome = () => {
             </div>
 
             {/* --- Main Unified Glass Card - Optimized for Height --- */}
-            <motion.div
+            <motion.div 
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -88,7 +89,7 @@ const Welcome = () => {
                         <span className="text-[10px] uppercase tracking-widest font-bold">THE DIGITAL PHOTOBOOTH</span>
                     </div>
                     {/* Brand name is now just POLARIS */}
-                    <h1
+                    <h1 
                         onClick={handleLogoClick}
                         className="text-5xl sm:text-6xl font-black tracking-tighter text-polaris-primary leading-tight cursor-default select-none active:scale-95 transition-transform"
                     >
@@ -98,7 +99,7 @@ const Welcome = () => {
                         Snap, process, and get studio-quality results in under a minute.
                     </p>
                 </motion.div>
-
+                
                 {/* --- 2. Full-Length Image Showcase (Strict Height) --- */}
                 <motion.div variants={itemVariants} className="relative h-[300px] sm:h-[350px] flex justify-center items-center gap-1 sm:gap-2 my-2 w-full">
                     {[1, 2, 3].map((i, index) => {
@@ -107,21 +108,21 @@ const Welcome = () => {
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{
-                                    opacity: 1,
+                                animate={{ 
+                                    opacity: 1, 
                                     scale: isCenter ? 1 : 0.95,
                                     zIndex: isCenter ? 10 : 1,
                                     y: isCenter ? -10 : 0
                                 }}
                                 transition={{ delay: 0.3 + (index * 0.1), type: "spring", stiffness: 100, damping: 20 }}
                                 whileHover={{ y: -20, scale: 1.05, zIndex: 20, transition: { duration: 0.3 } }}
-
+                                
                                 // Photostrip styling
-                                className={`aspect-portrait h-full p-1 bg-white rounded-xl border-[3px] border-polaris-primary/10 shadow-lg overflow-hidden transition-all duration-300 ease-out cursor-pointer ${isCenter ? 'shadow-polaris-primary/20' : 'opacity-90'}`}
+                                className={`aspect - portrait h - full p - 1 bg - white rounded - xl border - [3px] border - polaris - primary / 10 shadow - lg overflow - hidden transition - all duration - 300 ease - out cursor - pointer ${ isCenter ? 'shadow-polaris-primary/20' : 'opacity-90' } `}
                             >
-                                <img
-                                    src={`/assets/showcase_${i}.png`}
-                                    alt={`Portrait ${i}`}
+                                <img 
+                                    src={`/ assets / showcase_${ i }.png`} 
+                                    alt={`Portrait ${ i } `} 
                                     // CRITICAL: object-contain ensures the image's entire vertical length is shown.
                                     className="w-full h-full object-contain bg-polaris-accent/10 rounded-lg"
                                 />
@@ -132,11 +133,11 @@ const Welcome = () => {
 
                 {/* --- 3. Interactive Controls --- */}
                 <div className="flex flex-col w-full flex-grow mt-4 justify-between space-y-4">
-
+                    
                     {/* Feature Highlight Chips */}
                     <motion.div variants={itemVariants} className="flex justify-center gap-3 text-xs text-polaris-text font-medium border-b border-polaris-primary/5 pb-3">
-                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Zap size={14} className='text-polaris-primary' /> 60 Second Process</span>
-                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Sparkles size={14} className='text-polaris-primary' /> Retouch Included</span>
+                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Zap size={14} className='text-polaris-primary'/> 60 Second Process</span>
+                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Sparkles size={14} className='text-polaris-primary'/> Retouch Included</span>
                     </motion.div>
 
                     {/* Copy Selector (Sliding Pill) */}
@@ -156,7 +157,7 @@ const Welcome = () => {
                                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                         />
                                     )}
-                                    <div className={`flex flex-col items-center leading-tight transition-colors ${copies === num ? 'text-polaris-primary font-bold' : 'text-polaris-muted hover:text-polaris-text'}`}>
+                                    <div className={`flex flex - col items - center leading - tight transition - colors ${ copies === num ? 'text-polaris-primary font-bold' : 'text-polaris-muted hover:text-polaris-text' } `}>
                                         <span className="text-lg leading-none">{num}</span>
                                         <span className="text-[9px] uppercase tracking-wider font-normal opacity-70">Prints</span>
                                     </div>
@@ -171,7 +172,7 @@ const Welcome = () => {
                             <span className="text-4xl font-black text-polaris-primary tracking-tight">₹{copies * 100}</span>
                             <p className="text-polaris-muted text-xs uppercase tracking-widest mt-1">TOTAL</p>
                         </div>
-
+                        
                         <button
                             onClick={handleStart}
                             disabled={isLoading}
@@ -188,10 +189,10 @@ const Welcome = () => {
 
                 {/* --- Footer Links --- */}
                 <motion.footer variants={itemVariants} className="pt-4 w-full text-center text-polaris-muted/70">
-                    <div className="flex justify-center gap-8 text-sm font-medium">
-                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors py-2 px-4">About Us</button>
-                        <span className="opacity-30 py-2">•</span>
-                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors py-2 px-4">Terms & Conditions</button>
+                    <div className="flex justify-center gap-6 text-[10px] font-medium">
+                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">About</button>
+                        <span className="opacity-30">•</span>
+                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors">Policies</button>
                     </div>
                 </motion.footer>
             </motion.div>
@@ -233,4 +234,5 @@ const Welcome = () => {
     );
 };
 
-export default Welcome; 
+export default Welcome;
+```
