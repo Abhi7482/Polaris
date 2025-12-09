@@ -44,6 +44,8 @@ const Welcome = () => {
         const success = await startSession();
         if (success) {
             navigate('/payment');
+        } else {
+            alert("Failed to connect to local backend. Is the printer/camera ready?");
         }
         setIsLoading(false);
     };
