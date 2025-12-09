@@ -10,9 +10,23 @@ export const SessionProvider = ({ children }) => {
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
     const [copies, setCopies] = useState(2);
 
+    // Helper for API calls (supports both Web and Electron)
+    const callApi = async (path, method = 'POST', body = null) => {
+        if (window.polarisLocal && window.polarisLocal.api) {
+            console.log(`[Electron] Calling ${method} ${path}`);
+            const res = await window.polarisLocal.api(path, method, body);
+            if (!res.success) throw new Error(res.error || 'Electron API Error');
+            return { data: res.data };
+        } else {
+            console.log(`[Web] Calling ${method} ${path}`);
+            if (method === 'GET') return axios.get(`${API_URL}${path}`);
+            return axios.post(`${API_URL}${path}`, body);
+        }
+    };
+
     const startSession = async () => {
         try {
-            const res = await axios.post(`${API_URL}/session/start`);
+            const res = await callApi('/session/start', 'POST');
             setSessionId(res.data.session_id);
             setPhotos([]);
             return true;
@@ -24,7 +38,7 @@ export const SessionProvider = ({ children }) => {
 
     const resetSession = async () => {
         try {
-            await axios.post(`${API_URL}/session/reset`);
+            await callApi('/session/reset', 'POST');
             setSessionId(null);
             setPhotos([]);
             setOptions({ filter: 'color', frame: 'default' });
@@ -37,7 +51,7 @@ export const SessionProvider = ({ children }) => {
     const updateOptions = async (newOptions) => {
         setOptions(prev => ({ ...prev, ...newOptions }));
         try {
-            await axios.post(`${API_URL}/session/options`, {
+            await callApi('/session/options', 'POST', {
                 filter_type: newOptions.filter,
                 frame_id: newOptions.frame
             });
@@ -53,7 +67,7 @@ export const SessionProvider = ({ children }) => {
     return (
         <SessionContext.Provider value={{
             sessionId, photos, options, copies,
-            startSession, resetSession, updateOptions, addPhoto, setCopies
+            startSession, resetSession, updateOptions, addPhoto, setCopies, callApi
         }}>
             {children}
         </SessionContext.Provider>

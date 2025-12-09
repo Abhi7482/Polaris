@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('polarisLocal', {
     exit: () => ipcRenderer.send('app-exit'),
-    startSession: (orderId) => ipcRenderer.invoke('app-start-session', orderId),
+    api: (path, method, body) => ipcRenderer.invoke('app-api-request', { path, method, body }),
     getCameraPreview: () => ipcRenderer.invoke('get-camera-preview')
 });
 

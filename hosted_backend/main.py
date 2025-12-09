@@ -15,6 +15,16 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Polaris Hosted Backend")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for now (or specify Netlify URL)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 import os
 
 # --- Configuration ---

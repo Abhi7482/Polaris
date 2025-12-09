@@ -120,24 +120,30 @@ ipcMain.on('app-exit', () => {
     app.quit();
 });
 
-// Start Session Proxy (Renderer -> Main -> Local Backend)
-ipcMain.handle('app-start-session', async (event, orderId) => {
-    console.log(`Starting session for order: ${orderId}`);
+// Generic API Proxy (Renderer -> Main -> Local Backend)
+ipcMain.handle('app-api-request', async (event, { path, method = 'GET', body }) => {
+    console.log(`Proxying request: ${method} ${path}`);
     try {
-        const response = await fetch('http://localhost:8000/session/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order_id: orderId })
-        });
+        const url = `http://localhost:8000${path}`;
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
+        const data = await response.json();
 
         if (response.ok) {
-            return { success: true };
+            return { success: true, data };
         } else {
-            console.error('Failed to start session:', response.statusText);
-            return { success: false, error: response.statusText };
+            console.error(`API Error [${path}]:`, response.statusText);
+            return { success: false, error: response.statusText, data };
         }
     } catch (error) {
-        console.error('Error calling local backend:', error);
+        console.error(`Network Error [${path}]:`, error);
         return { success: false, error: error.message };
     }
 });

@@ -9,7 +9,7 @@ import API_URL from '../config';
 
 const Capture = () => {
     const navigate = useNavigate();
-    const { photos, addPhoto } = useSession();
+    const { photos, addPhoto, callApi } = useSession();
     const [isCapturing, setIsCapturing] = useState(false);
     const [showCountdown, setShowCountdown] = useState(false);
     const [shotCount, setShotCount] = useState(0);
@@ -40,7 +40,7 @@ const Capture = () => {
         setIsCapturing(true);
 
         try {
-            const res = await axios.post(`${API_URL}/capture`);
+            const res = await callApi('/capture', 'POST');
             if (res.data.status === 'captured') {
                 addPhoto(res.data.path);
                 setShotCount(prev => prev + 1);

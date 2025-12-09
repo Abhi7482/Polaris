@@ -8,13 +8,13 @@ import API_URL from '../config';
 
 const Review = () => {
     const navigate = useNavigate();
-    const { photos, options, resetSession, startSession, copies } = useSession();
+    const { photos, options, resetSession, startSession, copies, callApi } = useSession();
     const [processedPath, setProcessedPath] = useState(null);
 
     useEffect(() => {
         const processStrip = async () => {
             try {
-                const res = await axios.post(`${API_URL}/process`);
+                const res = await callApi('/process', 'POST');
                 setProcessedPath(res.data.path);
             } catch (err) {
                 console.error("Processing failed", err);
@@ -25,7 +25,7 @@ const Review = () => {
 
     const handlePrint = async () => {
         try {
-            await axios.post(`${API_URL}/print`, { copies });
+            await callApi('/print', 'POST', { copies });
             navigate('/printing');
         } catch (err) {
             console.error("Print failed", err);
