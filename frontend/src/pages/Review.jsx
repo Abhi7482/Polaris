@@ -8,7 +8,7 @@ import API_URL from '../config';
 
 const Review = () => {
     const navigate = useNavigate();
-    const { photos, options, resetSession, startSession } = useSession();
+    const { photos, options, resetSession, startSession, copies } = useSession();
     const [processedPath, setProcessedPath] = useState(null);
 
     useEffect(() => {
@@ -25,7 +25,7 @@ const Review = () => {
 
     const handlePrint = async () => {
         try {
-            await axios.post(`${API_URL}/print`);
+            await axios.post(`${API_URL}/print`, { copies });
             navigate('/printing');
         } catch (err) {
             console.error("Print failed", err);

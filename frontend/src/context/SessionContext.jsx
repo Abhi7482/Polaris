@@ -8,6 +8,7 @@ export const SessionProvider = ({ children }) => {
     const [sessionId, setSessionId] = useState(null);
     const [photos, setPhotos] = useState([]);
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
+    const [copies, setCopies] = useState(2);
 
     const startSession = async () => {
         try {
@@ -27,6 +28,7 @@ export const SessionProvider = ({ children }) => {
             setSessionId(null);
             setPhotos([]);
             setOptions({ filter: 'color', frame: 'default' });
+            setCopies(2);
         } catch (err) {
             console.error("Failed to reset session", err);
         }
@@ -50,8 +52,8 @@ export const SessionProvider = ({ children }) => {
 
     return (
         <SessionContext.Provider value={{
-            sessionId, photos, options,
-            startSession, resetSession, updateOptions, addPhoto
+            sessionId, photos, options, copies,
+            startSession, resetSession, updateOptions, addPhoto, setCopies
         }}>
             {children}
         </SessionContext.Provider>

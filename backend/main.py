@@ -134,8 +134,11 @@ async def process_photos():
     else:
         raise HTTPException(status_code=500, detail="Processing failed")
 
+class PrintRequest(BaseModel):
+    copies: int = 1
+
 @app.post("/print")
-async def print_strip(background_tasks: BackgroundTasks):
+async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     session = state_manager.get_state()
     if not session:
         raise HTTPException(status_code=400, detail="No active session")
@@ -145,8 +148,8 @@ async def print_strip(background_tasks: BackgroundTasks):
     if not os.path.exists(print_path):
         raise HTTPException(status_code=404, detail="Print file not found")
     
-    background_tasks.add_task(printer.print_image, print_path)
-    return {"status": "printing_started"}
+    background_tasks.add_task(printer.print_image, print_path, request.copies)
+    return {"status": "printing_started", "copies": request.copies}
 
 # Payment Integration
 from payment import PhonePeService

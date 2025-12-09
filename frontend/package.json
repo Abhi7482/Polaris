@@ -3,32 +3,67 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
+    "package": "vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.polaris.photobooth",
+    "productName": "Polaris",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/polaris-backend.exe",
+        "to": "backend/polaris-backend.exe"
+      },
+      {
+        "from": "../backend/assets",
+        "to": "backend/assets"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/favicon.ico"
+    }
   },
   "dependencies": {
+    "@react-three/fiber": "^9.4.2",
     "axios": "^1.6.0",
     "framer-motion": "^11.0.0",
     "lottie-react": "^2.4.0",
     "lucide-react": "^0.300.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^6.20.0",
+    "three": "^0.181.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
     "eslint": "^8.53.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "wait-on": "^9.0.3"
   }
 }

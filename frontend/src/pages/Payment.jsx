@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
+import { useSession } from '../context/SessionContext';
 
 const Payment = () => {
     const navigate = useNavigate();
+    const { copies } = useSession();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -19,8 +21,11 @@ const Payment = () => {
             // Note: PhonePe might append params like ?code=...
             const redirectUrl = window.location.origin + "/options";
 
+            // Amount is copies * 100 rupees * 100 paise
+            const amountInPaise = copies * 100 * 100;
+
             const res = await axios.post(`${API_URL}/pay/initiate`, {
-                amount: 100, // 1.00 INR in paise
+                amount: amountInPaise,
                 redirect_url: redirectUrl
             });
 
@@ -48,7 +53,7 @@ const Payment = () => {
                 className="bg-white p-12 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4"
             >
                 <h2 className="text-3xl font-bold mb-4 text-gray-800">Start Session</h2>
-                <p className="text-gray-500 mb-8">Pay ₹1.00 to begin your photobooth experience.</p>
+                <p className="text-gray-500 mb-8">Pay ₹{copies * 100} to begin your photobooth experience.</p>
 
                 {error && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
