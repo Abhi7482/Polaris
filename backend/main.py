@@ -159,7 +159,7 @@ import platform
 import shutil
 
 # HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com" # Update with actual URL
-HOSTED_BACKEND_URL = "http://localhost:10000" # For testing, or use env var
+HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com" # Live URL
 
 async def heartbeat_loop():
     while True:
