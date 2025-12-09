@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import API_URL from '../config';
+import API_URL, { HOSTED_API_URL } from '../config';
 import { useSession } from '../context/SessionContext';
 
 const Payment = () => {
@@ -16,22 +16,22 @@ const Payment = () => {
         setError(null);
         try {
             // Redirect URL: Where PhonePe sends the user after payment
-            // For a kiosk, we want to come back to the Options page to start the session
-            // We'll use a special route or just the options page.
-            // Note: PhonePe might append params like ?code=...
-            const redirectUrl = window.location.origin + "/options";
+            // We want to come back to the PaymentSuccess page
+            const redirectUrl = window.location.origin + "/payment-success";
 
             // Amount is copies * 100 rupees * 100 paise
             const amountInPaise = copies * 100 * 100;
 
-            const res = await axios.post(`${API_URL}/pay/initiate`, {
+            // Use Hosted Backend
+            const res = await axios.post(`${HOSTED_API_URL}/create_order`, {
                 amount: amountInPaise,
-                redirect_url: redirectUrl
+                copies: copies, // Send copies so backend can store it
+                redirect_url: redirectUrl // Optional if backend hardcodes it, but good to send
             });
 
-            if (res.data.status === 'initiated' && res.data.url) {
+            if (res.data.success && res.data.payment_url) {
                 // Redirect to PhonePe
-                window.location.href = res.data.url;
+                window.location.href = res.data.payment_url;
             } else {
                 setError("Failed to initiate payment. Please try again.");
             }

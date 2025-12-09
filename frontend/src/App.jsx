@@ -11,6 +11,8 @@ import Policies from './pages/Policies';
 import Payment from './pages/Payment';
 import About from './pages/About';
 
+import PaymentSuccess from './pages/PaymentSuccess';
+
 function App() {
     return (
         <SessionProvider>
@@ -18,6 +20,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Welcome />} />
                     <Route path="/payment" element={<Payment />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/options" element={<Options />} />
                     <Route path="/capture" element={<Capture />} />
                     <Route path="/review" element={<Review />} />

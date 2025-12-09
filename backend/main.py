@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import cv2
 import os
 import logging
+import time
 from camera import CameraService
 from printer import PrinterService
 from processor import ImageProcessor
@@ -151,35 +152,43 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(printer.print_image, print_path, request.copies)
     return {"status": "printing_started", "copies": request.copies}
 
-# Payment Integration
-from payment import PhonePeService
-payment_service = PhonePeService()
+# --- Kiosk Heartbeat ---
+import asyncio
+import requests
+import platform
+import shutil
 
-class PaymentRequest(BaseModel):
-    amount: int # in paise
-    redirect_url: str
+# HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com" # Update with actual URL
+HOSTED_BACKEND_URL = "http://localhost:10000" # For testing, or use env var
 
-@app.post("/pay/initiate")
-async def initiate_payment(request: PaymentRequest):
-    # Callback URL - In production this should be your public server URL
-    # For local dev, we might not get callbacks, so we rely on redirect or polling
-    callback_url = "https://polaris7482.netlify.app/payment/callback" 
-    
-    response = payment_service.initiate_payment(request.amount, callback_url, request.redirect_url)
-    if response and response.get("success"):
-        return {
-            "status": "initiated",
-            "url": response["data"]["instrumentResponse"]["redirectInfo"]["url"],
-            "transactionId": response["data"]["merchantTransactionId"]
-        }
-    else:
-        raise HTTPException(status_code=500, detail="Payment initiation failed")
+async def heartbeat_loop():
+    while True:
+        try:
+            # Gather Status
+            status = {
+                "camera": "OK" if camera.is_open else "DISCONNECTED",
+                "printer": "OK", # TODO: Implement actual printer check via win32print
+                "disk_space": f"{shutil.disk_usage('.').free // (1024**3)}GB",
+                "internet": "CONNECTED" # If this request succeeds, it's connected
+            }
+            
+            payload = {
+                "kiosk_id": "polaris-001", # Unique ID per kiosk
+                "timestamp": str(time.time()),
+                "version": "1.0.0",
+                "status": status
+            }
+            
+            # Send Heartbeat
+            # requests.post(f"{HOSTED_BACKEND_URL}/heartbeat", json=payload, timeout=5)
+            # logger.info(f"Heartbeat sent: {status}")
+            
+        except Exception as e:
+            logger.error(f"Heartbeat failed: {e}")
+            
+        await asyncio.sleep(300) # Every 5 minutes
 
-@app.get("/pay/status/{transaction_id}")
-async def check_payment_status(transaction_id: str):
-    response = payment_service.check_status(transaction_id)
-    if response:
-        return response
-    else:
-        raise HTTPException(status_code=500, detail="Status check failed")
+@app.on_event("startup")
+async def start_heartbeat():
+    asyncio.create_task(heartbeat_loop())
 
