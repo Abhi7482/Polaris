@@ -19,9 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now (or specify Netlify URL)
+    allow_origins=[
+        "https://polaris7482.netlify.app", 
+        "http://localhost:5173", # Dev
+        "http://localhost:4173"  # Preview
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -55,6 +59,18 @@ def generate_checksum(payload: str, endpoint: str, salt_key: str, salt_index: in
     data_to_hash = payload + endpoint + salt_key
     checksum = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
     return f"{checksum}###{salt_index}"
+
+def verify_checksum(response_body: str, x_verify: str, salt_key: str, salt_index: int) -> bool:
+    """
+    Verifies the checksum of the webhook callback.
+    """
+    try:
+        expected_checksum = hashlib.sha256((response_body + salt_key).encode('utf-8')).hexdigest()
+        expected_x_verify = f"{expected_checksum}###{salt_index}"
+        return x_verify == expected_x_verify
+    except Exception as e:
+        logger.error(f"Checksum verification failed: {e}")
+        return False
 
 # --- Endpoints ---
 
@@ -129,12 +145,40 @@ async def create_order(request: CreateOrderRequest):
 @app.post("/webhook")
 async def phonepe_webhook(request: Request):
     # Verify X-VERIFY header
+    # Verify X-VERIFY header
     x_verify = request.headers.get("X-VERIFY")
-    # In a real app, we MUST verify the checksum here using the payload + salt
-    # For simplicity in this prototype, we'll trust the payload but log it.
-    
+    if not x_verify:
+        logger.error("Missing X-VERIFY header")
+        return {"status": "error", "message": "Missing Signature"}
+
+    # Get raw body for verification
+    body_bytes = await request.body()
+    body_str = body_bytes.decode('utf-8')
+
+    # Verify Signature
     try:
-        body = await request.json()
+        response_json = await request.json() # Parse to dict for later use, but use raw str for hash
+        # PhonePe documentation implies hashing the 'response' field (base64) + salt_key
+        # However, for Webhooks, usually the entire body is signed or specific logic applies.
+        # Standard PhonePe Webhook verification: SHA256(response_body + salt_key) ### salt_index
+        # Note: request.body() gives the raw payload string.
+        
+        is_valid = verify_checksum(body_str, x_verify, SALT_KEY, SALT_INDEX)
+        
+        if not is_valid:
+             logger.error("Invalid Signature")
+             # In production, specific PhonePe environments might behave differently, 
+             # preventing us from rejecting it outright if we are debugging. 
+             # BUT to be compliant, we SHOULD reject it.
+             return {"status": "error", "message": "Invalid Signature"}
+
+    except Exception as e:
+         logger.error(f"Body Read Error: {e}")
+         return {"status": "error"}
+
+    try:
+        # We already parsed json above, but let's safely get it again or use the variable
+        body = response_json
         encoded_response = body.get("response")
         if encoded_response:
             decoded_response = base64.b64decode(encoded_response).decode('utf-8')

@@ -192,3 +192,8 @@ async def heartbeat_loop():
 async def start_heartbeat():
     asyncio.create_task(heartbeat_loop())
 
+if __name__ == "__main__":
+    import uvicorn
+    # Use 127.0.0.1 to ensure it only listens locally
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+

@@ -4,79 +4,98 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    /* --- STRICT PALETTE --- */
+    --urban-espresso: #5B4A3E;
+    --pavement-shadow: #8A8077;
+    --luxe-oat: #CBBFAF;
+    --ivory-silk: #E8DED4;
+    --sunlit-veil: #F6F2EB;
+}
+
 @layer base {
     body {
-        /* Added smooth scrolling for better anchor navigation if needed */
-        @apply bg-polaris-bg text-polaris-text font-sans antialiased overflow-x-hidden scroll-smooth;
+        /* Background is now Sunlit Veil for a warm, premium base */
+        background-color: var(--sunlit-veil);
+        color: var(--urban-espresso);
+        font-family: 'Outfit', sans-serif;
+        @apply antialiased overflow-x-hidden;
     }
 
-    /* Remove tap highlight on mobile for a native app feel */
     * {
         -webkit-tap-highlight-color: transparent;
     }
 }
 
 @layer components {
-    /* --- GLASSMORPHISM SYSTEM --- */
+    /* --- REFINED GLASS SYSTEM --- */
 
-    /* Base Glass Style */
-    .glass-base {
-        @apply backdrop-blur-md border border-white/10 transition-all duration-300;
+    /* The base container glass - Warm and blurred */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(232, 222, 212, 0.6);
+        /* Ivory Silk border */
+        box-shadow:
+            0 4px 6px -1px rgba(91, 74, 62, 0.05),
+            0 10px 15px -3px rgba(91, 74, 62, 0.05),
+            inset 0 0 20px rgba(255, 255, 255, 0.5);
     }
 
-    /* Subtle Glass (For inactive items) */
-    .glass-subtle {
-        @apply glass-base bg-white/5 hover:bg-white/10 hover:border-white/20 shadow-sm;
+    /* Active element glass - slightly more opaque */
+    .glass-active {
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--luxe-oat);
+        box-shadow: 0 20px 40px -10px rgba(91, 74, 62, 0.15);
     }
 
-    /* Intense Glass (For active items or main containers) */
-    .glass-intense {
-        @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl;
+    /* The primary button style */
+    .btn-espresso {
+        background-color: var(--urban-espresso);
+        color: var(--sunlit-veil);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Input/Interactive Glass */
-    .glass-input {
-        @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-polaris-primary/50 focus:bg-white/10 transition-all placeholder:text-gray-500;
+    .btn-espresso:hover {
+        background-color: #4A3C32;
+        /* Slightly darker espresso */
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(91, 74, 62, 0.4);
     }
 }
 
 @layer utilities {
-
-    /* Custom Aspect Ratio for full-length portraits */
-    .aspect-portrait {
-        aspect-ratio: 2 / 3;
+    .text-espresso {
+        color: var(--urban-espresso);
     }
 
-    /* --- SCROLLBAR UTILITIES (Essential for TemplateSelector) --- */
+    .text-shadow {
+        color: var(--pavement-shadow);
+    }
+
+    .bg-oat {
+        background-color: var(--luxe-oat);
+    }
+
+    /* Hiding scrollbars but keeping functionality */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
 
     .no-scrollbar {
         -ms-overflow-style: none;
-        /* IE and Edge */
         scrollbar-width: none;
-        /* Firefox */
     }
 
-    /* --- VISUAL EFFECTS --- */
-
-    /* Text Glow for Headers */
-    .text-glow {
-        text-shadow: 0 0 30px currentColor;
-    }
-
-    /* Film Grain Texture (Kept from your original) */
+    /* Grain Overlay for Texture */
     .bg-noise {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        inset: 0;
+        z-index: 0;
+        opacity: 0.35;
         pointer-events: none;
-        z-index: 50;
-        opacity: 0.04;
         mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 }
