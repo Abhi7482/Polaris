@@ -96,7 +96,7 @@ const Policies = () => {
                             <li>The kiosk fails to print due to a technical/printer error</li>
                             <li>The kiosk crashes or freezes after payment but before printing</li>
                         </ul>
-                        <p>Refunds (if approved) are Credited within 5–7 working days back to the original payment source.</p>
+                        <p>After verification, refunds are credited to the original payment source within 5–7 working days.</p>
 
                         <h3 className="text-xl font-bold mt-6 text-gray-800">Exclusions</h3>
                         <p>No refunds for:</p>
