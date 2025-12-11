@@ -115,7 +115,46 @@ async def update_options(options: OptionsUpdate):
         state_manager.set_frame(options.frame_id)
     return state_manager.get_state()
 
-# Process & Print
+# Layout Info
+@app.get("/frame-layout")
+async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"):
+    try:
+        # Construct path to check asset
+        template_filename = f"{filter_type}_{frame_id}.png"
+        template_path = os.path.join("assets", "frames", filter_type, template_filename)
+        
+        # Default dims
+        strip_width = 1875
+        strip_height = 5625
+        
+        slots = []
+        
+        # 1. Try Auto-Detection
+        if os.path.exists(template_path):
+            slots = processor.detect_slots(template_path)
+            
+        # 2. Fallback
+        if not slots:
+            # Revert to legacy logic manually since processor logic is internal
+             fallback_key = "vintage" if frame_id in ["vintage", "drunken_monkey"] else "regular"
+             slots = processor.legacy_coordinates.get(fallback_key, processor.legacy_coordinates["regular"])
+        
+        # 3. Convert to Percentages for CSS
+        # { top: '1.86%', left: '5.54%', width: '88.9%', height: '20.28%' }
+        css_slots = []
+        for (x, y, w, h) in slots:
+            css_slots.append({
+                "top": f"{(y / strip_height) * 100:.2f}%",
+                "left": f"{(x / strip_width) * 100:.2f}%",
+                "width": f"{(w / strip_width) * 100:.2f}%",
+                "height": f"{(h / strip_height) * 100:.2f}%"
+            })
+            
+        return {"slots": css_slots, "source": "auto" if os.path.exists(template_path) else "fallback"}
+
+    except Exception as e:
+        logger.error(f"Layout fetch error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 @app.post("/process")
 async def process_photos():
     session = state_manager.get_state()

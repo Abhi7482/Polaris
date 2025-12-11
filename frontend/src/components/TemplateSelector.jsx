@@ -7,6 +7,7 @@ const templates = {
         { id: 'vintage', name: 'Polaroid', desc: 'Warm Tone', hex: '#CBBFAF' },
         { id: 'pop', name: 'Film Strip', desc: 'Cinema Style', hex: '#8A8077' },
         { id: 'soft', name: 'Minimal', desc: 'Clean Lines', hex: '#F6F2EB' },
+        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
     ],
     bw: [
         { id: 'regular', name: 'Classic', desc: 'Timeless', hex: '#D4D4D4' },

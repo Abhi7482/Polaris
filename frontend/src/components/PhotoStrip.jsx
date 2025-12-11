@@ -5,29 +5,41 @@ import { useSession } from '../context/SessionContext';
 
 const PhotoStrip = ({ photos = [] }) => {
     // Get options from context to determine the frame
-    const { options } = useSession();
+    const { options, callApi } = useSession();
     const { filter, frame } = options || { filter: 'color', frame: 'default' };
 
-    // Coordinate definitions
-    const COORDINATES = {
-        regular: [
-            { top: '1.86%', left: '5.54%', width: '88.9%', height: '20.28%' },
-            { top: '24.01%', left: '5.54%', width: '88.9%', height: '20.28%' },
-            { top: '46.20%', left: '5.54%', width: '88.9%', height: '20.28%' },
-            { top: '68.37%', left: '5.54%', width: '88.9%', height: '20.28%' }
-        ],
-        vintage: [
-            { top: '1.58%', left: '4.75%', width: '90.72%', height: '20.57%' },
-            { top: '24.01%', left: '5.28%', width: '90.72%', height: '20.30%' },
-            { top: '46.20%', left: '5.28%', width: '90.72%', height: '20.30%' },
-            { top: '68.37%', left: '5.28%', width: '90.72%', height: '20.30%' }
-        ]
-    };
+    // Default slots (Regular) - fallback while loading
+    const DEFAULT_SLOTS = [
+        { top: '1.86%', left: '5.54%', width: '88.9%', height: '20.28%' },
+        { top: '24.01%', left: '5.54%', width: '88.9%', height: '20.28%' },
+        { top: '46.20%', left: '5.54%', width: '88.9%', height: '20.28%' },
+        { top: '68.37%', left: '5.54%', width: '88.9%', height: '20.28%' }
+    ];
 
-    // Determine which set of coordinates to use
-    // If frame is 'vintage' OR 'drunken_monkey', use vintage coords.
-    const isVintage = frame === 'vintage' || frame === 'drunken_monkey';
-    const slots = isVintage ? COORDINATES.vintage : COORDINATES.regular;
+    const [slots, setSlots] = React.useState(DEFAULT_SLOTS);
+
+    React.useEffect(() => {
+        const fetchLayout = async () => {
+            try {
+                // If using default frame, just use default slots
+                if (!frame || frame === 'default' || frame === 'regular') {
+                    setSlots(DEFAULT_SLOTS);
+                    return;
+                }
+
+                console.log(`Fetching layout for ${filter}/${frame}`);
+                const res = await callApi(`/frame-layout?filter_type=${filter}&frame_id=${frame}`, 'GET');
+                if (res.data && res.data.slots) {
+                    setSlots(res.data.slots);
+                }
+            } catch (err) {
+                console.warn("Failed to fetch frame layout, using default", err);
+                setSlots(DEFAULT_SLOTS);
+            }
+        };
+
+        fetchLayout();
+    }, [filter, frame]);
 
     // Construct Frame URL
     // Public Folder: /frames/color/color_drunken_monkey.png
