@@ -84,6 +84,16 @@ def verify_checksum(response_body: str, x_verify: str, salt_key: str, salt_index
 def read_root():
     return {"message": "Polaris Hosted Backend is Running"}
 
+@app.get("/debug-config")
+def debug_config():
+    return {
+        "ENV": ENV,
+        "BASE_URL": BASE_URL,
+        "MERCHANT_ID_LENGTH": len(MERCHANT_ID) if MERCHANT_ID else 0,
+        "MERCHANT_ID_PREFIX": MERCHANT_ID[:4] if MERCHANT_ID else "None",
+        "SALT_KEY_CONFIGURED": bool(SALT_KEY)
+    }
+
 @app.post("/create_order")
 async def create_order(request: CreateOrderRequest):
     transaction_id = str(uuid.uuid4())
