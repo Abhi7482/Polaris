@@ -30,10 +30,11 @@ const TiltButton = ({ isSelected, onClick, title, subtitle, color }) => {
             onClick={onClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            whileTap={{ scale: 0.98 }} // Touch feedback
             style={{ rotateX, rotateY, perspective: 1000 }}
             className={`
-                relative w-full h-24 rounded-2xl border transition-all duration-700 ease-[var(--ease-editorial)]
-                flex flex-col items-center justify-center overflow-hidden group
+                relative w-full h-24 min-h-[48px] rounded-2xl border transition-all duration-700 ease-[var(--ease-editorial)]
+                flex flex-col items-center justify-center overflow-hidden group btn-magnetic frame-card-touch
                 ${isSelected
                     ? 'border-[#5B4A3E] bg-[#5B4A3E] text-[#F6F2EB] shadow-2xl scale-[1.02]'
                     : 'border-[#E8DED4] bg-white/30 text-[#5B4A3E] hover:bg-white/60'}
@@ -162,7 +163,8 @@ const Options = () => {
                     <div className="mt-12">
                         <Button
                             onClick={handleContinue}
-                            className="btn-magnetic w-full py-7 rounded-full text-lg font-medium tracking-[0.15em] uppercase bg-[#5B4A3E] text-[#F6F2EB] shadow-[0_20px_40px_-10px_rgba(91,74,62,0.3)] hover:shadow-[0_25px_50px_-10px_rgba(91,74,62,0.4)]"
+                            whileTap={{ scale: 0.98 }} // Touch feedback
+                            className="btn-magnetic w-full py-7 min-h-[48px] rounded-full text-lg font-medium tracking-[0.15em] uppercase bg-[#5B4A3E] text-[#F6F2EB] shadow-[0_20px_40px_-10px_rgba(91,74,62,0.3)] hover:shadow-[0_25px_50px_-10px_rgba(91,74,62,0.4)] frame-card-touch"
                         >
                             Enter Booth
                         </Button>
@@ -180,7 +182,7 @@ const Options = () => {
                         {/* Gallery Header */}
                         <div className="flex justify-between items-center px-4 mb-4 opacity-0 animate-[fadeIn_1s_ease-out_0.5s_forwards]">
                             <span className="type-label">Format Gallery</span>
-                            <span className="type-label text-[#5B4A3E]/40">Scroll to Select</span>
+                            <span className="type-label text-[#5B4A3E]/40">Swipe to Select</span>
                         </div>
 
                         {/* The Component */}

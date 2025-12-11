@@ -45,6 +45,8 @@
             0 20px 50px -12px rgba(91, 74, 62, 0.08);
         /* Deep soft shadow */
         transition: all 0.6s var(--ease-editorial);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     /* Active state for interactive glass */
@@ -78,12 +80,10 @@
 
     /* Frame Caption Typography */
     .frame-title {
-        font-weight: 200;
-        transition: all 0.5s var(--ease-editorial);
-    }
-
-    .frame-title-selected {
-        font-weight: 400;
+        font-weight: 300;
+        transition: opacity 0.5s var(--ease-editorial);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .frame-subtitle {
@@ -91,15 +91,39 @@
         letter-spacing: 0.15em;
         opacity: 0.6;
         transition: all 0.5s var(--ease-editorial);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Pagination Dots */
+    .pagination-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(138, 128, 119, 0.3);
+        transition: all 0.3s var(--ease-editorial);
+        cursor: pointer;
+    }
+
+    .pagination-dot-active {
+        background: var(--urban-espresso);
+        transform: scale(1.2);
+        box-shadow: 0 0 0 2px rgba(91, 74, 62, 0.1);
     }
 
     /* --- INTERACTIONS --- */
     .btn-magnetic {
         transition: transform 0.4s var(--ease-magnetic), box-shadow 0.4s var(--ease-magnetic);
+        min-height: 48px;
+        /* Touch target minimum */
     }
 
     .btn-magnetic:active {
         transform: scale(0.96);
+    }
+
+    .frame-card-touch {
+        min-height: 48px;
     }
 }
 

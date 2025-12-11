@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 
 const templates = {
@@ -43,6 +43,7 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
             onClick={onClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            whileTap={{ scale: 0.98 }} // Touch feedback
             style={{ rotateX, rotateY, perspective: 1200 }}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{
@@ -55,7 +56,7 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
             }}
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative h-[85%] flex-shrink-0 snap-center flex flex-col items-center justify-center cursor-pointer group z-10"
+            className="relative h-[85%] flex-shrink-0 snap-center flex flex-col items-center justify-center cursor-pointer group z-10 frame-card-touch"
         >
             {/* 1. Activation Glow (Selected Only) */}
             {isSelected && (
@@ -120,9 +121,9 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
             {/* 7. Editorial Caption (Below Frame) */}
             <div className={`
                 mt-24 text-center transition-all duration-500 relative z-30
-                ${isSelected ? 'opacity-100 transform-none' : 'opacity-40 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'}
+                ${isSelected ? 'opacity-100 transform-none' : 'opacity-100 translate-y-2 group-hover:translate-y-0'}
             `}>
-                <h3 className={`frame-title ${isSelected ? 'frame-title-selected' : ''} text-[#5B4A3E] text-lg tracking-wide transition-all duration-500 ${isSelected ? 'opacity-100 font-light' : 'opacity-80 font-thin'}`}>{template.name}</h3>
+                <h3 className={`frame-title text-[#5B4A3E] text-lg tracking-wide transition-opacity duration-500 ${isSelected ? 'opacity-100' : 'opacity-90'}`}>{template.name}</h3>
                 <p className="frame-subtitle text-[10px] uppercase tracking-[0.15em] text-[#8A8077] mt-2">{template.desc}</p>
             </div>
 
@@ -134,11 +135,35 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
 
 const TemplateSelector = ({ selected, onSelect, filterType = 'color' }) => {
     const currentTemplates = templates[filterType] || templates.color;
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!scrollRef.current) return;
+            const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+            const index = Math.round(scrollLeft / (clientWidth / currentTemplates.length));
+            setCurrentIndex(Math.max(0, Math.min(currentTemplates.length - 1, index)));
+        };
+
+        const ref = scrollRef.current;
+        ref?.addEventListener('scroll', handleScroll);
+        return () => ref?.removeEventListener('scroll', handleScroll);
+    }, [currentTemplates.length]);
+
+    const goToIndex = (index) => {
+        if (!scrollRef.current) return;
+        const cardWidth = scrollRef.current.clientWidth / currentTemplates.length;
+        scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+    };
 
     return (
-        <div className="w-full h-full flex items-center pl-4 lg:pl-0">
+        <div className="w-full h-full flex flex-col pl-4 lg:pl-0">
             {/* Scroll Container */}
-            <div className="w-full h-full overflow-x-auto overflow-y-hidden flex items-center gap-12 lg:gap-20 snap-x snap-mandatory no-scrollbar pr-24 pb-12 pt-4">
+            <div
+                ref={scrollRef}
+                className="w-full flex-1 overflow-x-auto overflow-y-hidden flex items-center gap-12 lg:gap-20 snap-x snap-mandatory no-scrollbar pr-24 pb-12 pt-4"
+            >
 
                 <AnimatePresence mode='popLayout'>
                     {currentTemplates.map((t, index) => (
@@ -154,6 +179,18 @@ const TemplateSelector = ({ selected, onSelect, filterType = 'color' }) => {
 
                 {/* End Spacer */}
                 <div className="w-12 shrink-0" />
+            </div>
+
+            {/* Pagination Dots */}
+            <div className="flex justify-center items-center gap-2 mb-4 px-4">
+                {currentTemplates.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => goToIndex(index)}
+                        className={`pagination-dot ${currentIndex === index ? 'pagination-dot-active' : ''}`}
+                        aria-label={`Go to frame ${index + 1}`}
+                    />
+                ))}
             </div>
         </div>
     );
