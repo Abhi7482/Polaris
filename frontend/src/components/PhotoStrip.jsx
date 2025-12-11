@@ -49,9 +49,13 @@ const PhotoStrip = ({ photos = [] }) => {
     // However, user specifically added "Drunken Monkey".
 
     // Note: TemplateSelector sets frame to "drunken_monkey" etc.
+    // Construct Frame URL
+    // Public Folder: /frames/color/color_drunken_monkey.png
     const frameUrl = (frame && frame !== 'default')
         ? `/frames/${filter}/${filter}_${frame}.png`
         : null;
+
+    console.log(`[PhotoStrip] Filter: ${filter}, Frame: ${frame}, URL: ${frameUrl}`);
 
     return (
         <div
