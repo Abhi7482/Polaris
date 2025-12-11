@@ -5,6 +5,7 @@ const templates = {
     color: [
         { id: 'regular', name: 'Original', desc: 'Standard 2x6', hex: '#E8DED4' },
         { id: 'vintage', name: 'Polaroid', desc: 'Warm Tone', hex: '#CBBFAF' },
+        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#FF4500' },
         { id: 'pop', name: 'Film Strip', desc: 'Cinema Style', hex: '#8A8077' },
         { id: 'soft', name: 'Minimal', desc: 'Clean Lines', hex: '#F6F2EB' },
     ],
@@ -47,26 +48,32 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{
                 opacity: 1,
-                scale: 1,
+                scale: isSelected ? 1.03 : 1,
                 y: 0,
+                boxShadow: isSelected
+                    ? '0 25px 50px -12px rgba(91,74,62,0.15)'
+                    : '0 8px 20px -5px rgba(0,0,0,0.05)',
                 filter: isSelected ? 'grayscale(0%)' : 'grayscale(100%) opacity(0.7)' // Cinematic focus
             }}
             whileHover={{ scale: 1.02, filter: 'grayscale(0%) opacity(1)' }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative h-[85%] flex-shrink-0 snap-center flex flex-col items-center justify-center cursor-pointer group"
+            className="relative h-[85%] flex-shrink-0 snap-center flex flex-col items-center justify-center cursor-pointer group z-10"
         >
-            {/* 1. Ambient Halo (Selected Only) */}
+            {/* 1. Activation Glow (Selected Only) */}
             {isSelected && (
                 <motion.div
                     layoutId="halo-glow"
-                    className="absolute inset-0 bg-[#5B4A3E] opacity-5 blur-2xl rounded-xl -z-10 scale-110"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1.1 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(91,74,62,0.05)_0%,transparent_60%)] blur-[40px] rounded-xl -z-10"
                 />
             )}
 
             {/* 2. The Frame Container */}
             <div
                 className={`
-                    relative h-full w-auto rounded-lg transition-all duration-700 p-3
+                    relative h-full w-auto rounded-lg transition-all duration-700 p-3 z-20
                     ${isSelected
                         ? 'bg-white/80 shadow-[0_30px_60px_-15px_rgba(91,74,62,0.2)] backdrop-blur-xl'
                         : 'bg-transparent hover:bg-white/40'}
@@ -76,7 +83,7 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                 <img
                     src={`/frames/${filterType}/${filterType}_${template.id}.png`}
                     alt={template.name}
-                    className="h-full w-auto object-contain rounded-[2px] shadow-sm z-10 relative"
+                    className="h-full w-auto object-contain rounded-[2px] shadow-sm z-20 relative"
                     draggable="false"
                     onError={(e) => {
                         e.target.style.display = 'none';
@@ -88,16 +95,21 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                 />
 
                 {/* 4. Optical Reflection Overlay (Glass Sheen) */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-lg z-20 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-lg z-30 mix-blend-overlay" />
 
-                {/* 5. Refracted Badge (Selected Only) */}
+                {/* 5. Subtle Highlight Sweep (Selected Only) */}
+                {isSelected && (
+                    <div className="absolute inset-0 rounded-lg pointer-events-none z-25 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] bg-[length:300%_100%] sweep-highlight mix-blend-overlay" />
+                )}
+
+                {/* 6. Refracted Badge (Selected Only) */}
                 {isSelected && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute -bottom-12 left-1/2 -translate-x-1/2 z-30"
+                        className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-40"
                     >
-                        <div className="glass-optical px-6 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                        <div className="glass-optical px-6 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-xl">
                             <div className="w-1.5 h-1.5 bg-[#5B4A3E] rounded-full animate-pulse" />
                             <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#5B4A3E]">
                                 Selected
@@ -107,13 +119,13 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                 )}
             </div>
 
-            {/* 6. Editorial Caption (Below Frame) */}
+            {/* 7. Editorial Caption (Below Frame) */}
             <div className={`
-                mt-6 text-center transition-all duration-500
+                mt-20 text-center transition-all duration-500 relative z-30
                 ${isSelected ? 'opacity-100 transform-none' : 'opacity-40 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'}
             `}>
-                <h3 className="text-[#5B4A3E] text-lg font-light tracking-wide">{template.name}</h3>
-                <p className="text-[10px] uppercase tracking-widest text-[#8A8077] mt-1">{template.desc}</p>
+                <h3 className={`frame-title ${isSelected ? 'frame-title-selected' : ''} text-[#5B4A3E] text-lg tracking-wide transition-all duration-500 ${isSelected ? 'opacity-100 font-light' : 'opacity-80 font-thin'}`}>{template.name}</h3>
+                <p className="frame-subtitle text-[10px] uppercase tracking-[0.15em] text-[#8A8077] mt-2">{template.desc}</p>
             </div>
 
         </motion.div>

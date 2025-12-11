@@ -76,6 +76,23 @@
         color: var(--pavement-shadow);
     }
 
+    /* Frame Caption Typography */
+    .frame-title {
+        font-weight: 200;
+        transition: all 0.5s var(--ease-editorial);
+    }
+
+    .frame-title-selected {
+        font-weight: 400;
+    }
+
+    .frame-subtitle {
+        font-variant-caps: small-caps;
+        letter-spacing: 0.15em;
+        opacity: 0.6;
+        transition: all 0.5s var(--ease-editorial);
+    }
+
     /* --- INTERACTIONS --- */
     .btn-magnetic {
         transition: transform 0.4s var(--ease-magnetic), box-shadow 0.4s var(--ease-magnetic);
@@ -124,6 +141,22 @@
         mask-composite: exclude;
         pointer-events: none;
         opacity: 0.6;
+    }
+
+    /* Highlight Sweep Animation */
+    @keyframes sweep-highlight {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    .sweep-highlight {
+        background-size: 300% 100%;
+        animation: sweep-highlight 1.5s ease-out forwards;
     }
 }
 
