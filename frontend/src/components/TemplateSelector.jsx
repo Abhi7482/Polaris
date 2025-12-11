@@ -5,7 +5,6 @@ const templates = {
     color: [
         { id: 'regular', name: 'Original', desc: 'Standard 2x6', hex: '#E8DED4' },
         { id: 'vintage', name: 'Polaroid', desc: 'Warm Tone', hex: '#CBBFAF' },
-        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#FF4500' },
         { id: 'pop', name: 'Film Strip', desc: 'Cinema Style', hex: '#8A8077' },
         { id: 'soft', name: 'Minimal', desc: 'Clean Lines', hex: '#F6F2EB' },
     ],
@@ -52,10 +51,9 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                 y: 0,
                 boxShadow: isSelected
                     ? '0 25px 50px -12px rgba(91,74,62,0.15)'
-                    : '0 8px 20px -5px rgba(0,0,0,0.05)',
-                filter: isSelected ? 'grayscale(0%)' : 'grayscale(100%) opacity(0.7)' // Cinematic focus
+                    : '0 8px 20px -5px rgba(0,0,0,0.05)'
             }}
-            whileHover={{ scale: 1.02, filter: 'grayscale(0%) opacity(1)' }}
+            whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="relative h-[85%] flex-shrink-0 snap-center flex flex-col items-center justify-center cursor-pointer group z-10"
         >
@@ -107,7 +105,7 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-40"
+                        className="absolute -bottom-20 left-1/2 -translate-x-1/2 z-40"
                     >
                         <div className="glass-optical px-6 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-xl">
                             <div className="w-1.5 h-1.5 bg-[#5B4A3E] rounded-full animate-pulse" />
@@ -121,7 +119,7 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
 
             {/* 7. Editorial Caption (Below Frame) */}
             <div className={`
-                mt-20 text-center transition-all duration-500 relative z-30
+                mt-24 text-center transition-all duration-500 relative z-30
                 ${isSelected ? 'opacity-100 transform-none' : 'opacity-40 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'}
             `}>
                 <h3 className={`frame-title ${isSelected ? 'frame-title-selected' : ''} text-[#5B4A3E] text-lg tracking-wide transition-all duration-500 ${isSelected ? 'opacity-100 font-light' : 'opacity-80 font-thin'}`}>{template.name}</h3>
