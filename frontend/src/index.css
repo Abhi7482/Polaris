@@ -1,84 +1,92 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-    /* --- STRICT PALETTE --- */
+    /* --- LUXE PALETTE --- */
     --urban-espresso: #5B4A3E;
     --pavement-shadow: #8A8077;
     --luxe-oat: #CBBFAF;
     --ivory-silk: #E8DED4;
     --sunlit-veil: #F6F2EB;
+
+    /* --- PHYSICS --- */
+    --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+    /* Slow, confident snap */
+    --ease-magnetic: cubic-bezier(0.33, 1, 0.68, 1);
+    /* Elastic lift */
 }
 
 @layer base {
     body {
-        /* Background is now Sunlit Veil for a warm, premium base */
         background-color: var(--sunlit-veil);
         color: var(--urban-espresso);
         font-family: 'Outfit', sans-serif;
-        @apply antialiased overflow-x-hidden;
-    }
-
-    * {
-        -webkit-tap-highlight-color: transparent;
+        @apply antialiased overflow-hidden selection:bg-polaris-primary selection:text-white;
     }
 }
 
 @layer components {
-    /* --- REFINED GLASS SYSTEM --- */
 
-    /* The base container glass - Warm and blurred */
-    .glass-panel {
+    /* --- PRECISION OPTICAL GLASS --- */
+    /* Simulates high-end lens glass with double refraction */
+    .glass-optical {
         background: rgba(255, 255, 255, 0.4);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(232, 222, 212, 0.6);
-        /* Ivory Silk border */
+        /* Double border technique for "cut glass" edge */
         box-shadow:
-            0 4px 6px -1px rgba(91, 74, 62, 0.05),
-            0 10px 15px -3px rgba(91, 74, 62, 0.05),
-            inset 0 0 20px rgba(255, 255, 255, 0.5);
+            inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+            /* Inner sharp edge */
+            0 0 0 1px rgba(255, 255, 255, 0.3),
+            /* Outer soft edge */
+            0 20px 50px -12px rgba(91, 74, 62, 0.08);
+        /* Deep soft shadow */
+        transition: all 0.6s var(--ease-editorial);
     }
 
-    /* Active element glass - slightly more opaque */
-    .glass-active {
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid var(--luxe-oat);
-        box-shadow: 0 20px 40px -10px rgba(91, 74, 62, 0.15);
+    /* Active state for interactive glass */
+    .glass-optical-active {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(32px);
+        box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+            0 0 0 1px rgba(203, 191, 175, 0.4),
+            /* Luxe Oat tint on edge */
+            0 30px 80px -20px rgba(91, 74, 62, 0.15),
+            0 0 20px rgba(255, 255, 255, 0.5);
+        /* Inner Glow */
     }
 
-    /* The primary button style */
-    .btn-espresso {
-        background-color: var(--urban-espresso);
-        color: var(--sunlit-veil);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* --- TYPOGRAPHY SYSTEM --- */
+    .type-hero {
+        font-weight: 200;
+        /* Extremely thin */
+        letter-spacing: -0.03em;
+        line-height: 0.9;
     }
 
-    .btn-espresso:hover {
-        background-color: #4A3C32;
-        /* Slightly darker espresso */
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(91, 74, 62, 0.4);
+    .type-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        font-weight: 600;
+        color: var(--pavement-shadow);
+    }
+
+    /* --- INTERACTIONS --- */
+    .btn-magnetic {
+        transition: transform 0.4s var(--ease-magnetic), box-shadow 0.4s var(--ease-magnetic);
+    }
+
+    .btn-magnetic:active {
+        transform: scale(0.96);
     }
 }
 
 @layer utilities {
-    .text-espresso {
-        color: var(--urban-espresso);
-    }
-
-    .text-shadow {
-        color: var(--pavement-shadow);
-    }
-
-    .bg-oat {
-        background-color: var(--luxe-oat);
-    }
-
-    /* Hiding scrollbars but keeping functionality */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
@@ -88,14 +96,56 @@
         scrollbar-width: none;
     }
 
-    /* Grain Overlay for Texture */
-    .bg-noise {
+    /* REFINED GRAIN - Lighter, more subtle */
+    .bg-noise-fine {
         position: fixed;
         inset: 0;
         z-index: 0;
         opacity: 0.35;
         pointer-events: none;
         mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
+
+    /* CHROMATIC EDGE GLOW */
+    .chromatic-edge {
+        position: relative;
+    }
+
+    .chromatic-edge::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0), rgba(203, 191, 175, 0.3), rgba(255, 255, 255, 0));
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0.6;
+    }
+}
+
+/* ANIMATIONS */
+@keyframes slow-drift {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(20px, -30px) rotate(5deg);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+.animate-drift {
+    animation: slow-drift 15s ease-in-out infinite;
+}
+
+.animate-drift-delayed {
+    animation: slow-drift 20s ease-in-out infinite reverse;
 }
