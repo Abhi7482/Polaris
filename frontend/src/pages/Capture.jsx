@@ -9,10 +9,14 @@ import API_URL from '../config';
 
 const Capture = () => {
     const navigate = useNavigate();
-    const { photos, addPhoto, callApi } = useSession();
+    const { photos, addPhoto, callApi, options } = useSession(); // Get options
     const [isCapturing, setIsCapturing] = useState(false);
     const [showCountdown, setShowCountdown] = useState(false);
     const [shotCount, setShotCount] = useState(0);
+
+    // Frame Overlay Logic
+    const { filter, frame } = options || { filter: 'color', frame: 'default' };
+    const frameUrl = (frame && frame !== 'default') ? `/frames/${filter}/${filter}_${frame}.png` : null;
 
     useEffect(() => {
         startShotSequence();
@@ -59,13 +63,27 @@ const Capture = () => {
 
             {/* Left: Camera Feed */}
             <div className="flex-1 relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/20 glass-intense">
+                {/* 1. Camera Feed */}
                 <CameraPreview isCapturing={isCapturing} />
+
+                {/* 2. Live Frame Overlay */}
+                {frameUrl && (
+                    <img
+                        src={frameUrl}
+                        alt="Live Overlay"
+                        className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10 opacity-80"
+                        style={{
+                            // Mix blend mode can look cool, but might obscure vision. 
+                            // Normal blend is safer for "looking through" the hole.
+                        }}
+                    />
+                )}
 
                 {showCountdown && (
                     <Countdown onComplete={handleCountdownComplete} />
                 )}
 
-                <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+                <div className="absolute bottom-10 left-0 right-0 flex justify-center z-20">
                     <div className="glass-button px-8 py-3 rounded-full text-2xl font-bold tracking-widest">
                         {shotCount < 4 ? `POSE ${shotCount + 1} / 4` : "GREAT JOB!"}
                     </div>
