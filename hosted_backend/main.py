@@ -39,6 +39,12 @@ ENV = os.getenv("ENV", "UAT")
 BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox" if ENV == "UAT" else "https://api.phonepe.com/apis/hermes"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://polaris7482.netlify.app")
 
+logger.info(f"--- STARTUP CONFIGURATION ---")
+logger.info(f"ENV: {ENV}")
+logger.info(f"BASE_URL: {BASE_URL}")
+logger.info(f"MERCHANT_ID: {MERCHANT_ID}") # It's safe to log ID, but not Key
+logger.info(f"-----------------------------")
+
 # --- In-Memory Storage (Replace with DB in production) ---
 orders_db: Dict[str, Dict[str, Any]] = {}
 kiosk_status_db: Dict[str, Any] = {}
