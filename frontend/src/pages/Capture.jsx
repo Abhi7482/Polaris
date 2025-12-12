@@ -67,17 +67,7 @@ const Capture = () => {
                 <CameraPreview isCapturing={isCapturing} />
 
                 {/* 2. Live Frame Overlay */}
-                {frameUrl && (
-                    <img
-                        src={frameUrl}
-                        alt="Live Overlay"
-                        className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10 opacity-80"
-                        style={{
-                            // Mix blend mode can look cool, but might obscure vision. 
-                            // Normal blend is safer for "looking through" the hole.
-                        }}
-                    />
-                )}
+                {/* Live Frame Overlay Removed as per user request */}
 
                 {showCountdown && (
                     <Countdown onComplete={handleCountdownComplete} />
