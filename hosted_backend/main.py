@@ -101,9 +101,7 @@ async def create_order(request: CreateOrderRequest):
         pay_request = StandardCheckoutPayRequest.build_request(
             merchant_order_id=merchant_order_id,
             amount=request.amount,
-            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}",
-            callback_url=callback_url,
-            mobile_number="9999999999" # Required by SDK? logic check needed
+            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}"
         )
         
         # Execute Payment
