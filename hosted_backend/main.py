@@ -217,11 +217,50 @@ async def phonepe_webhook(request: Request):
     return {"status": "ok"}
 
 @app.get("/order_status/{order_id}")
-def get_order_status(order_id: str):
+async def get_order_status(order_id: str):
     order = orders_db.get(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
+    # Active Status Check if PENDING
+    if order["status"] == "PENDING":
+        try:
+            # Construct Status Check URL
+            status_path = f"/pg/v1/status/{MERCHANT_ID}/{order_id}"
+            
+            # Generate Checksum
+            data_to_hash = status_path + SALT_KEY
+            checksum = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
+            x_verify = f"{checksum}###{SALT_INDEX}"
+            
+            headers = {
+                "Content-Type": "application/json",
+                "X-VERIFY": x_verify,
+                "X-MERCHANT-ID": MERCHANT_ID
+            }
+            
+            # Call PhonePe API
+            response = requests.get(
+                f"{BASE_URL}{status_path}",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("code") == "PAYMENT_SUCCESS":
+                    order["status"] = "SUCCESS"
+                    logger.info(f"Order {order_id} active check: SUCCESS")
+                elif data.get("code") == "PAYMENT_ERROR" or data.get("code") == "PAYMENT_DECLINED":
+                    order["status"] = "FAILED"
+                    logger.info(f"Order {order_id} active check: FAILED")
+                # else: keep PENDING (e.g. PAYMENT_PENDING)
+            else:
+                logger.warning(f"Status Check API failed: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Active Status Check Error: {e}")
+            # Do not fail request, just return cached PENDING logic
+
     return {
         "order_id": order_id,
         "status": order["status"],

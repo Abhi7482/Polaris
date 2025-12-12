@@ -5,13 +5,14 @@ const templates = {
     color: [
         { id: 'regular', name: 'Original', desc: 'Standard 2x6', hex: '#E8DED4' },
         { id: 'vintage', name: 'Polaroid', desc: 'Warm Tone', hex: '#CBBFAF' },
+        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
         { id: 'pop', name: 'Film Strip', desc: 'Cinema Style', hex: '#8A8077' },
         { id: 'soft', name: 'Minimal', desc: 'Clean Lines', hex: '#F6F2EB' },
-        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
     ],
     bw: [
         { id: 'regular', name: 'Classic', desc: 'Timeless', hex: '#D4D4D4' },
         { id: 'vintage', name: 'Noir', desc: 'High Contrast', hex: '#808080' },
+        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
         { id: 'grain', name: 'Grain', desc: 'Texture', hex: '#505050' },
     ]
 };
