@@ -7,7 +7,7 @@ import { useSession } from '../context/SessionContext';
 
 const Payment = () => {
     const navigate = useNavigate();
-    const { copies } = useSession();
+    const { copies, startSession } = useSession();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -82,6 +82,21 @@ const Payment = () => {
                 <p className="mt-6 text-xs text-gray-400">
                     Secured by PhonePe. Test Mode Active.
                 </p>
+
+                {/* Dev Bypass */}
+                {import.meta.env.DEV && (
+                    <button
+                        onClick={async () => {
+                            setLoading(true);
+                            const success = await startSession();
+                            if (success) navigate('/options');
+                            setLoading(false);
+                        }}
+                        className="mt-4 text-xs text-red-300 hover:text-red-500 underline"
+                    >
+                        [DEV] Skip Payment
+                    </button>
+                )}
             </motion.div>
         </div>
     );

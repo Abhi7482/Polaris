@@ -3,17 +3,17 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 
 const templates = {
     color: [
-        { id: 'regular', name: 'Original', desc: 'Standard 2x6', hex: '#E8DED4' },
-        { id: 'vintage', name: 'Polaroid', desc: 'Warm Tone', hex: '#CBBFAF' },
+        { id: 'classic_black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
+        { id: 'vintage', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
         { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
-        { id: 'pop', name: 'Film Strip', desc: 'Cinema Style', hex: '#8A8077' },
-        { id: 'soft', name: 'Minimal', desc: 'Clean Lines', hex: '#F6F2EB' },
+        { id: 'pop', name: 'After Dark', desc: 'Neon Pop', hex: '#2C2C2C' },
+        { id: 'blue_royale', name: 'Blue Royale', desc: 'Royal Tones', hex: '#1E3A8A' },
+        { id: 'retro_bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
     ],
     bw: [
-        { id: 'regular', name: 'Classic', desc: 'Timeless', hex: '#D4D4D4' },
-        { id: 'vintage', name: 'Noir', desc: 'High Contrast', hex: '#808080' },
-        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
-        { id: 'grain', name: 'Grain', desc: 'Texture', hex: '#505050' },
+        { id: 'regular', name: 'Classic Black', desc: 'Timeless', hex: '#1a1a1a' },
+        { id: 'vintage', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
+        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#505050' },
     ]
 };
 
