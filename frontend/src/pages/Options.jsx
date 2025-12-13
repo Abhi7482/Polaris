@@ -134,14 +134,14 @@ const Options = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <TiltButton
-                                    title="Chrome"
-                                    subtitle="Natural"
+                                    title="Vibrant"
+                                    subtitle="(Color)"
                                     isSelected={options.filter === 'color'}
                                     onClick={() => handleOptionSelect('filter', 'color')}
                                 />
                                 <TiltButton
-                                    title="Noir"
-                                    subtitle="Analog"
+                                    title="Classic"
+                                    subtitle="(Black & White)"
                                     isSelected={options.filter === 'bw'}
                                     onClick={() => handleOptionSelect('filter', 'bw')}
                                 />

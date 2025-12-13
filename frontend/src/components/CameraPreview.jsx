@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import API_URL from '../config';
 
-const CameraPreview = ({ isCapturing }) => {
+const CameraPreview = ({ isCapturing, filterType = 'color' }) => {
     const [streamUrl, setStreamUrl] = useState(`${API_URL}/camera/stream`);
     const [error, setError] = useState(false);
 
@@ -17,6 +17,9 @@ const CameraPreview = ({ isCapturing }) => {
                     src={streamUrl}
                     alt="Live Camera Feed"
                     className="w-full h-full object-cover transform scale-x-[-1]" // Mirror effect
+                    style={{
+                        filter: filterType === 'bw' ? 'grayscale(100%) contrast(1.1)' : 'none'
+                    }}
                     onError={handleError}
                 />
             ) : (

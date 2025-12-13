@@ -64,7 +64,7 @@ const Capture = () => {
             {/* Left: Camera Feed */}
             <div className="flex-1 relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white/20 glass-intense">
                 {/* 1. Camera Feed */}
-                <CameraPreview isCapturing={isCapturing} />
+                <CameraPreview isCapturing={isCapturing} filterType={filter} />
 
                 {/* 2. Live Frame Overlay */}
                 {/* Live Frame Overlay Removed as per user request */}
