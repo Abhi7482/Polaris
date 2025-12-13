@@ -219,10 +219,18 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     if not session:
         raise HTTPException(status_code=400, detail="No active session")
     
+    
     # Create 4x6 layout for printing
+    # Source is the usually generated final strip
+    print_path = f"prints/{session.session_id}_final.jpg"
     print_path_4x6 = f"prints/{session.session_id}_print_4x6.png"
     
     # Generate the 4x6 composite (Process synchronously here or in bg task? Sync is safer for file existence)
+    # Check if source exists first
+    if not os.path.exists(print_path):
+        logger.error(f"Source strip not found: {print_path}")
+        raise HTTPException(status_code=400, detail="Photo strip not generated yet")
+
     final_output_path = processor.create_4x6_layout(print_path, print_path_4x6)
     
     if not final_output_path or not os.path.exists(final_output_path):

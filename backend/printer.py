@@ -59,49 +59,52 @@ class PrinterService:
         return None
 
     def print_image(self, image_path, copies=1, is_bw=False):
-        printer_name = self.get_printer()
-        if not printer_name:
-            # Fallback
-            printer_name = win32print.GetDefaultPrinter()
-            logger.warning(f"Target printer not found, using default: {printer_name}")
+        # DUAL PRINTER STRATEGY
+        # We switch the logical printer based on color mode.
+        # This allows the User to specifically configure "EPSON L3210 BW" with 
+        # Grayscale presets in Windows, completely separate from the Color one.
+        
+        target_name = "EPSON L3210 Series" # Default / Color
+        
+        if is_bw:
+            # Check if BW printer exists
+            # We assume it was named "EPSON L3210 BW"
+            bw_name = "EPSON L3210 BW"
+            target_name = bw_name
+            logger.info(f"Mode is Black & White -> Selected Printer: {target_name}")
+        else:
+            logger.info(f"Mode is Color -> Selected Printer: {target_name}")
+
+        # Basic verification it exists (optional but good)
+        # We can just rely on CreateDC failing if it doesn't
+        printer_name = target_name
             
         try:
-            # 1. Get User's Effective DEVMODE using DocumentProperties
-            # GetPrinter only returns the system defaults (Printing Defaults).
-            # DocumentProperties returns the current user's preferences (Printing Preferences).
-            hPrinter = win32print.OpenPrinter(printer_name)
-            try:
-                # DM_OUT_BUFFER = 2, DM_IN_BUFFER = 8 (not needed here as we aren't passing one in)
-                # mode=2 (DM_OUT_BUFFER) returns the DevMode
-                devmode = win32print.DocumentProperties(0, hPrinter, printer_name, None, None, 2)
-            finally:
-                win32print.ClosePrinter(hPrinter)
+            # SIMPLIFIED STRATEGY:
+            # We rely 100% on the User's Saved Default Settings (The Preset).
+            # We do NOT touch DEVMODE, because doing so often resets private driver settings
+            # (like Borderless, Glossy, Print Preview status, etc).
             
-            # 2. Modify DEVMODE for B&W if needed
-            if is_bw:
-                logger.info("Configuring driver for MONOCHROME processing")
-                devmode.Color = win32con.DMCOLOR_MONOCHROME
-            else:
-                devmode.Color = win32con.DMCOLOR_COLOR
+            logger.info(f"Printing to {printer_name} using System Default Settings (Preset)")
 
             for i in range(copies):
-                # 3. Create DC with modified DEVMODE
-                # Use win32gui to create DC using specific devmode, then wrap with win32ui
-                hDC_handle = win32gui.CreateDC("WINSPOOL", printer_name, devmode)
-                hDC = win32ui.CreateDCFromHandle(hDC_handle)
-                
-                # Use full printable resolution (HORZRES/VERTRES)
-                # This ensures we fill the entire paper, especially for borderless.
+                # Standard DC Creation uses the User's Default Preferences automatically
+                hDC = win32ui.CreateDC()
+                hDC.CreatePrinterDC(printer_name)
+
+                # Get Dimensions
                 target_width = hDC.GetDeviceCaps(win32con.HORZRES)
                 target_height = hDC.GetDeviceCaps(win32con.VERTRES)
-                
-                if i == 0:
-                    log_x = hDC.GetDeviceCaps(win32con.LOGPIXELSX)
-                    log_y = hDC.GetDeviceCaps(win32con.LOGPIXELSY)
-                    logger.info(f"Printer Logical DPI: {log_x}x{log_y}")
-                    logger.info(f"Filling Paper: {target_width}x{target_height} device pixels")
 
                 bmp = Image.open(image_path)
+                
+                # Dynamic Color Handling:
+                # We NOW trust the Driver Preset completely.
+                # If we selected "EPSON L3210 BW", the driver is set to Grayscale.
+                # If we selected "EPSON L3210 Series", the driver is set to Color.
+                # So we simply convert to RGB (standard GDI input) and send it.
+                
+                logger.info(f"Sending image to {printer_name} (Driver controls Color/BW)")
                 if bmp.mode != "RGB":
                     bmp = bmp.convert("RGB")
 
@@ -109,16 +112,15 @@ class PrinterService:
                 hDC.StartPage()
 
                 dib = ImageWin.Dib(bmp)
-                
-                # Draw image to specific 4x6 inch area at (0,0)
                 dib.draw(hDC.GetHandleOutput(), (0, 0, target_width, target_height))
 
                 hDC.EndPage()
                 hDC.EndDoc()
                 hDC.DeleteDC()
                 
-            logger.info(f"Sent {copies} copies to {printer_name} (B&W: {is_bw})")
+            logger.info(f"Sent {copies} copies to {printer_name}")
             return True
+            
         except Exception as e:
             logger.error(f"Printing failed: {e}")
             return False

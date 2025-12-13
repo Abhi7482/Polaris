@@ -199,35 +199,52 @@ class ImageProcessor:
 
     def create_4x6_layout(self, strip_path, output_path):
         """
-        Creates a 4x6 inch composition (1200x1800 px) with two 2x6 strips side-by-side.
+        Creates a 4x6 inch composition (1200x1800 px) using the 'borderless.png' overlay.
+        Places two copies of the strip (resized to 575x1730) into the transparent slots.
         """
         try:
             # Target Canvas: 1200x1800 px (4x6 @ 300 DPI)
             CANVAS_W = 1200
             CANVAS_H = 1800
             
-            # Sub-image target: 600x1800 (2x6 @ 300 DPI)
-            STRIP_W = 600
-            STRIP_H = 1800
-
+            # Target Strip Size requested by user
+            STRIP_W = 575
+            STRIP_H = 1730
+            
+            # Detected Offsets from analyze_borderless.py
+            # Region 0: x=31, y=35
+            OFFSET_X = 31
+            OFFSET_Y = 35
+            
+            # Create base canvas (White background)
             canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), "white")
             
-            # Load original strip
+            # 1. Load & Resize Strip
             strip = Image.open(strip_path)
-            
-            # Resize logic (fitting high-res strip to 600x1800)
-            # Use LANCZOS for best downscaling quality
             strip_resized = strip.resize((STRIP_W, STRIP_H), Image.Resampling.LANCZOS)
             
-            # Paste Left
-            canvas.paste(strip_resized, (0, 0))
+            # 2. Paste Left Copy
+            # (x=31, y=35)
+            canvas.paste(strip_resized, (OFFSET_X, OFFSET_Y))
             
-            # Paste Right (starting at x=600)
-            canvas.paste(strip_resized, (STRIP_W, 0))
+            # 3. Paste Right Copy
+            # Placed side-by-side. Left X + Width = 31 + 575 = 606
+            # (x=606, y=35)
+            canvas.paste(strip_resized, (OFFSET_X + STRIP_W, OFFSET_Y))
             
-            # Save as PNG as requested
+            # 4. Apply Overlay (The Border)
+            # This ensures cleanliness and covers any micro-gaps
+            overlay_path = os.path.join(self.base_dir, "assets", "overlays", "borderless.png")
+            if os.path.exists(overlay_path):
+                overlay = Image.open(overlay_path).convert("RGBA")
+                # overlay = overlay.resize((CANVAS_W, CANVAS_H)) # Should already be 1200x1800
+                canvas.paste(overlay, (0, 0), overlay)
+            else:
+                logger.warning(f"Borderless overlay not found at {overlay_path}")
+            
+            # Save
             canvas.save(output_path, format="PNG")
-            logger.info(f"4x6 Layout saved to {output_path}")
+            logger.info(f"4x6 Borderless Layout saved to {output_path}")
             return output_path
             
         except Exception as e:
