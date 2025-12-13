@@ -10,6 +10,9 @@ class ImageProcessor:
     def __init__(self):
         self.strip_width = 1875
         self.strip_height = 5625
+        # Define base directory relative to this file (backend/)
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        
         # Fallback coordinates for known types
         self.legacy_coordinates = {
             "regular": [
@@ -59,6 +62,8 @@ class ImageProcessor:
             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             detected_slots = []
+            detected_slots = []
+            
             for cnt in contours:
                 x, y, w, h = cv2.boundingRect(cnt)
                 # Filter out noise - slots must be reasonably large
@@ -89,8 +94,9 @@ class ImageProcessor:
 
             # 1. Resolve Template Path
             if frame_id and frame_id != "default":
-                template_filename = f"{filter_type}_{frame_id}.png"
-                template_path = os.path.join("assets", "frames", filter_type, template_filename)
+                template_filename = f"{frame_id}.png"
+                # Use absolute path to ensure we find it regardless of CWD
+                template_path = os.path.join(self.base_dir, "assets", "frames", filter_type, template_filename)
             
             # 2. Try Auto-Detection if template exists
             if template_path and os.path.exists(template_path):
@@ -108,7 +114,23 @@ class ImageProcessor:
             # 4. Process Photos
             current_slots = detected_slots 
             
+            # Determine scaling factors (Source Template -> Target Canvas)
+            scale_x = 1.0
+            scale_y = 1.0
+            
+            if template_path and os.path.exists(template_path):
+                try:
+                    with Image.open(template_path) as tmp_img:
+                        src_w, src_h = tmp_img.size
+                        scale_x = self.strip_width / src_w
+                        scale_y = self.strip_height / src_h
+                        # logger.info(f"Scaling slots by X:{scale_x:.3f}, Y:{scale_y:.3f} (Source: {src_w}x{src_h})")
+                except Exception as e:
+                    logger.warning(f"Could not determine scale factors: {e}")
+
             images = []
+            TARGET_PADDING = 50 # Consistent 50px bleed on target canvas
+            
             for i, path in enumerate(photo_paths):
                 if i >= len(current_slots): break
                 
@@ -116,9 +138,21 @@ class ImageProcessor:
                 if filter_type == "bw":
                     img = ImageOps.grayscale(img)
                 
-                # Get slot dimensions
-                x, y, w, h = current_slots[i]
+                # Get slot dimensions and Apply Scaling
+                raw_x, raw_y, raw_w, raw_h = current_slots[i]
                 
+                # Scale FIRST
+                x = int(raw_x * scale_x)
+                y = int(raw_y * scale_y)
+                w = int(raw_w * scale_x)
+                h = int(raw_h * scale_y)
+                
+                # Apply Safe Padding derived from Target dimensions
+                x = max(0, x - TARGET_PADDING)
+                y = max(0, y - TARGET_PADDING)
+                w += (TARGET_PADDING * 2)
+                h += (TARGET_PADDING * 2)
+
                 # Manual Fit (Resize & Crop) to ensure no stretching
                 img_ratio = img.width / img.height
                 target_ratio = w / h
@@ -151,9 +185,51 @@ class ImageProcessor:
                 overlay = overlay.resize((self.strip_width, self.strip_height), Image.Resampling.NEAREST)
                 canvas.paste(overlay, (0, 0), overlay)
             
+            # 6. Global B&W Enforcement
+            if filter_type == "bw":
+                # Convert to grayscale and back to RGB to ensure output format remains consistent/compatible
+                canvas = ImageOps.grayscale(canvas).convert("RGB")
+            
             canvas.save(output_path, quality=95)
             logger.info(f"Photostrip saved to {output_path}")
             return output_path
         except Exception as e:
             logger.error(f"Processing failed: {e}")
+            return None
+
+    def create_4x6_layout(self, strip_path, output_path):
+        """
+        Creates a 4x6 inch composition (1200x1800 px) with two 2x6 strips side-by-side.
+        """
+        try:
+            # Target Canvas: 1200x1800 px (4x6 @ 300 DPI)
+            CANVAS_W = 1200
+            CANVAS_H = 1800
+            
+            # Sub-image target: 600x1800 (2x6 @ 300 DPI)
+            STRIP_W = 600
+            STRIP_H = 1800
+
+            canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), "white")
+            
+            # Load original strip
+            strip = Image.open(strip_path)
+            
+            # Resize logic (fitting high-res strip to 600x1800)
+            # Use LANCZOS for best downscaling quality
+            strip_resized = strip.resize((STRIP_W, STRIP_H), Image.Resampling.LANCZOS)
+            
+            # Paste Left
+            canvas.paste(strip_resized, (0, 0))
+            
+            # Paste Right (starting at x=600)
+            canvas.paste(strip_resized, (STRIP_W, 0))
+            
+            # Save as PNG as requested
+            canvas.save(output_path, format="PNG")
+            logger.info(f"4x6 Layout saved to {output_path}")
+            return output_path
+            
+        except Exception as e:
+            logger.error(f"Failed to create 4x6 layout: {e}")
             return None

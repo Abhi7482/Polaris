@@ -120,7 +120,9 @@ async def update_options(options: OptionsUpdate):
 async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"):
     try:
         # Construct path to check asset
-        template_filename = f"{filter_type}_{frame_id}.png"
+        # New Logic: frame_id is the exact filename (e.g. "Drunken Monkey")
+        # The folder (frame_type) provides the context
+        template_filename = f"{frame_id}.png"
         template_path = os.path.join("assets", "frames", filter_type, template_filename)
         
         # Default dims
@@ -133,6 +135,39 @@ async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"
         if os.path.exists(template_path):
             slots = processor.detect_slots(template_path)
             
+            # SCALING FIX: Detect source dims and scale to 1875x5625
+            # otherwise small frames produce tiny % values
+            try:
+                img = cv2.imread(template_path)
+                if img is not None:
+                    h, w, _ = img.shape
+                    scale_x = strip_width / w
+                    scale_y = strip_height / h
+                    
+                    TARGET_PADDING = 50 # Must match processor.py logic!
+                    
+                    # Apply Scaling + Padding to slots
+                    scaled_slots = []
+                    for (sx, sy, sw, sh) in slots:
+                        # 1. Scale
+                        nx = sx * scale_x
+                        ny = sy * scale_y
+                        nw = sw * scale_x
+                        nh = sh * scale_y
+                        
+                        # 2. Pad (Inflate)
+                        # Ensure we don't go negative on x/y (though CSS handles overflow hidden usually)
+                        nx = max(0, nx - TARGET_PADDING)
+                        ny = max(0, ny - TARGET_PADDING)
+                        nw += (TARGET_PADDING * 2)
+                        nh += (TARGET_PADDING * 2)
+                        
+                        scaled_slots.append((nx, ny, nw, nh))
+                        
+                    slots = scaled_slots
+            except Exception as e:
+                logger.error(f"Failed to scale layout coords: {e}")
+
         # 2. Fallback
         if not slots:
             # Revert to legacy logic manually since processor logic is internal
@@ -183,12 +218,20 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     if not session:
         raise HTTPException(status_code=400, detail="No active session")
     
-    # Assuming the processed file is at the expected location
-    print_path = f"prints/{session.session_id}_final.jpg"
-    if not os.path.exists(print_path):
-        raise HTTPException(status_code=404, detail="Print file not found")
+    # Create 4x6 layout for printing
+    print_path_4x6 = f"prints/{session.session_id}_print_4x6.png"
     
-    background_tasks.add_task(printer.print_image, print_path, request.copies)
+    # Generate the 4x6 composite (Process synchronously here or in bg task? Sync is safer for file existence)
+    final_output_path = processor.create_4x6_layout(print_path, print_path_4x6)
+    
+    if not final_output_path or not os.path.exists(final_output_path):
+        logger.error("Failed to generate 4x6 print layout")
+        raise HTTPException(status_code=500, detail="Print generation failed")
+    
+    # Determine Color Mode
+    is_bw = (session.selected_filter == "bw")
+    
+    background_tasks.add_task(printer.print_image, final_output_path, request.copies, is_bw)
     return {"status": "printing_started", "copies": request.copies}
 
 # --- Kiosk Heartbeat ---
