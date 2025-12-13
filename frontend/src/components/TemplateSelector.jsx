@@ -3,17 +3,17 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 
 const templates = {
     color: [
-        { id: 'classic_black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
-        { id: 'vintage', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
-        { id: 'pop', name: 'After Dark', desc: 'Neon Pop', hex: '#2C2C2C' },
-        { id: 'blue_royale', name: 'Blue Royale', desc: 'Royal Tones', hex: '#1E3A8A' },
-        { id: 'retro_bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
+        { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
+        { id: 'Polaroid Film Strip', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
+        { id: 'Drunken Monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
+        { id: 'After Dark Pop', name: 'After Dark', desc: 'Neon Pop', hex: '#2C2C2C' },
+        { id: 'Blue Royale', name: 'Blue Royale', desc: 'Royal Tones', hex: '#1E3A8A' },
+        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
     ],
     bw: [
-        { id: 'regular', name: 'Classic Black', desc: 'Timeless', hex: '#1a1a1a' },
-        { id: 'vintage', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'drunken_monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#505050' },
+        { id: 'Classic Black', name: 'Classic Black', desc: 'Timeless', hex: '#1a1a1a' },
+        { id: 'Polaroid Film Strip', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
+        { id: 'Drunken Monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#505050' },
     ]
 };
 
@@ -80,9 +80,9 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
                         : 'bg-transparent hover:bg-white/40'}
                 `}
             >
-                {/* 3. The 2x6 Image (Strict Logic) */}
+                {/* 3. The 2x6 Image (Filename Logic) */}
                 <img
-                    src={`/frames/${filterType}/${filterType}_${template.id}.png`}
+                    src={`/frames/${filterType}/${template.id}.png`}
                     alt={template.name}
                     className="h-full w-auto object-contain rounded-[2px] shadow-sm z-20 relative"
                     draggable="false"
