@@ -16,7 +16,7 @@ const Capture = () => {
 
     // Frame Overlay Logic
     const { filter, frame } = options || { filter: 'color', frame: 'default' };
-    const frameUrl = (frame && frame !== 'default') ? `/frames/${filter}/${filter}_${frame}.png` : null;
+    const frameUrl = (frame && frame !== 'default') ? `/frames/${filter}/${frame}.png` : null;
 
     useEffect(() => {
         startShotSequence();

@@ -50,9 +50,10 @@ const PhotoStrip = ({ photos = [] }) => {
 
     // Note: TemplateSelector sets frame to "drunken_monkey" etc.
     // Construct Frame URL
-    // Public Folder: /frames/color/color_drunken_monkey.png
+    // Public Folder: /frames/color/After Dark Pop.png
+    // Logic: Since we switched to exact filenames as IDs, we no longer need the prefix.
     const frameUrl = (frame && frame !== 'default')
-        ? `/frames/${filter}/${filter}_${frame}.png`
+        ? `/frames/${filter}/${frame}.png`
         : null;
 
     console.log(`[PhotoStrip] Filter: ${filter}, Frame: ${frame}, URL: ${frameUrl}`);
