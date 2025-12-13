@@ -120,10 +120,11 @@ async def update_options(options: OptionsUpdate):
 async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"):
     try:
         # Construct path to check asset
-        # New Logic: frame_id is the exact filename (e.g. "Drunken Monkey")
-        # The folder (frame_type) provides the context
+        # Use absolute path relative to this file (backend/)
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        
         template_filename = f"{frame_id}.png"
-        template_path = os.path.join("assets", "frames", filter_type, template_filename)
+        template_path = os.path.join(BASE_DIR, "assets", "frames", filter_type, template_filename)
         
         # Default dims
         strip_width = 1875
