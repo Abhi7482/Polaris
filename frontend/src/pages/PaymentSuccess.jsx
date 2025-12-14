@@ -7,7 +7,7 @@ import { useSession } from '../context/SessionContext';
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { startSession } = useSession(); // We might use this as fallback or context update
+    const { startSession, incrementPaymentFailure } = useSession(); // We might use this as fallback or context update
     const [status, setStatus] = useState('verifying');
 
     useEffect(() => {
@@ -48,7 +48,11 @@ const PaymentSuccess = () => {
                         setTimeout(() => navigate('/options'), 2000);
                     }
                 } else if (res.data.status === 'FAILED') {
-                    if (isMounted) setStatus('failed');
+                    if (isMounted) {
+                        setStatus('failed');
+                        // Track this as a failure so we can limit retries
+                        if (incrementPaymentFailure) incrementPaymentFailure();
+                    }
                 } else {
                     // Still PENDING, retry
                     if (attempts < maxAttempts) {

@@ -10,6 +10,7 @@ export const SessionProvider = ({ children }) => {
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
     const [copies, setCopies] = useState(2);
     const [retakeCount, setRetakeCount] = useState(0);
+    const [paymentFailureCount, setPaymentFailureCount] = useState(0);
 
     // Helper for API calls (supports both Web and Electron)
     const callApi = async (path, method = 'POST', body = null) => {
@@ -31,6 +32,7 @@ export const SessionProvider = ({ children }) => {
             setSessionId(res.data.session_id);
             setPhotos([]);
             // Do NOT reset retakeCount here, so it persists across "Retake" calls
+            setPaymentFailureCount(0); // Reset payment failures on new session start
             return true;
         } catch (err) {
             console.error("Failed to start session", err);
@@ -46,6 +48,7 @@ export const SessionProvider = ({ children }) => {
             setOptions({ filter: 'color', frame: 'default' });
             setCopies(2);
             setRetakeCount(0); // Reset retakes on full session reset
+            setPaymentFailureCount(0);
         } catch (err) {
             console.error("Failed to reset session", err);
         }
@@ -53,6 +56,10 @@ export const SessionProvider = ({ children }) => {
 
     const incrementRetake = () => {
         setRetakeCount(prev => prev + 1);
+    };
+
+    const incrementPaymentFailure = () => {
+        setPaymentFailureCount(prev => prev + 1);
     };
 
     const updateOptions = async (newOptions) => {
@@ -73,8 +80,8 @@ export const SessionProvider = ({ children }) => {
 
     return (
         <SessionContext.Provider value={{
-            sessionId, photos, options, copies, retakeCount,
-            startSession, resetSession, updateOptions, addPhoto, setCopies, incrementRetake, callApi
+            sessionId, photos, options, copies, retakeCount, paymentFailureCount,
+            startSession, resetSession, updateOptions, addPhoto, setCopies, incrementRetake, incrementPaymentFailure, callApi
         }}>
             {children}
         </SessionContext.Provider>

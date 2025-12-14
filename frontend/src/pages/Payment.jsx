@@ -7,20 +7,19 @@ import { useSession } from '../context/SessionContext';
 
 const Payment = () => {
     const navigate = useNavigate();
-    const { copies } = useSession();
+    const { copies, paymentFailureCount, incrementPaymentFailure } = useSession();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [failureCount, setFailureCount] = useState(0);
 
     // Auto-redirect to Welcome if too many failures
     useEffect(() => {
-        if (failureCount >= 3) {
+        if (paymentFailureCount >= 2) {
             const timer = setTimeout(() => {
                 navigate('/');
             }, 3000);
             return () => clearTimeout(timer);
         }
-    }, [failureCount, navigate]);
+    }, [paymentFailureCount, navigate]);
 
     const handleBack = () => {
         navigate('/');
@@ -46,9 +45,12 @@ const Payment = () => {
             }
         } catch (err) {
             console.error("Payment Error", err);
-            setFailureCount(prev => prev + 1);
+            incrementPaymentFailure();
 
-            if (failureCount >= 2) {
+            // NOTE: paymentFailureCount is stale here (closure), so we check against current value BEFORE increment implies next value
+            // Actually, safe to just show generic error. The useEffect will handle the redirect on next render.
+            // But for immediate feedback:
+            if (paymentFailureCount >= 1) { // Will be 2 on next render
                 setError("Multiple failures detected. Redirecting to start...");
             } else {
                 setError("Payment failed. Please tap to retry.");
@@ -86,7 +88,7 @@ const Payment = () => {
 
                 <button
                     onClick={handlePayment}
-                    disabled={loading || failureCount >= 3}
+                    disabled={loading || paymentFailureCount >= 2}
                     className="w-full bg-polaris-accent hover:bg-polaris-accent/90 text-white font-bold py-4 rounded-xl text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                 >
                     {loading ? (
