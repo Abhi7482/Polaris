@@ -10,7 +10,14 @@ export const SessionProvider = ({ children }) => {
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
     const [copies, setCopies] = useState(2);
     const [retakeCount, setRetakeCount] = useState(0);
-    const [paymentFailureCount, setPaymentFailureCount] = useState(0);
+    // Initialize from sessionStorage to survive refreshes
+    const [paymentFailureCount, setPaymentFailureCount] = useState(() => {
+        try {
+            return parseInt(sessionStorage.getItem('polaris_payment_failures') || '0', 10);
+        } catch (e) {
+            return 0;
+        }
+    });
 
     // Helper for API calls (supports both Web and Electron)
     const callApi = async (path, method = 'POST', body = null) => {
@@ -31,8 +38,9 @@ export const SessionProvider = ({ children }) => {
             const res = await callApi('/session/start', 'POST');
             setSessionId(res.data.session_id);
             setPhotos([]);
-            // Do NOT reset retakeCount here, so it persists across "Retake" calls
-            setPaymentFailureCount(0); // Reset payment failures on new session start
+            // Do NOT reset retakeCount here
+            setPaymentFailureCount(0);
+            sessionStorage.setItem('polaris_payment_failures', '0');
             return true;
         } catch (err) {
             console.error("Failed to start session", err);
@@ -47,8 +55,9 @@ export const SessionProvider = ({ children }) => {
             setPhotos([]);
             setOptions({ filter: 'color', frame: 'default' });
             setCopies(2);
-            setRetakeCount(0); // Reset retakes on full session reset
+            setRetakeCount(0);
             setPaymentFailureCount(0);
+            sessionStorage.setItem('polaris_payment_failures', '0');
         } catch (err) {
             console.error("Failed to reset session", err);
         }
@@ -59,7 +68,11 @@ export const SessionProvider = ({ children }) => {
     };
 
     const incrementPaymentFailure = () => {
-        setPaymentFailureCount(prev => prev + 1);
+        setPaymentFailureCount(prev => {
+            const newVal = prev + 1;
+            sessionStorage.setItem('polaris_payment_failures', newVal.toString());
+            return newVal;
+        });
     };
 
     const updateOptions = async (newOptions) => {

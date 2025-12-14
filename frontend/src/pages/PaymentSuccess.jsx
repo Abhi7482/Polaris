@@ -51,7 +51,12 @@ const PaymentSuccess = () => {
                     if (isMounted) {
                         setStatus('failed');
                         // Track this as a failure so we can limit retries
-                        if (incrementPaymentFailure) incrementPaymentFailure();
+                        if (incrementPaymentFailure) {
+                            console.log("Incrementing failure count"); // Debug logging
+                            incrementPaymentFailure();
+                        } else {
+                            alert("CRITICAL ERROR: incrementPaymentFailure is missing!");
+                        }
                     }
                 } else {
                     // Still PENDING, retry
@@ -77,7 +82,7 @@ const PaymentSuccess = () => {
         verifyPayment();
 
         return () => { isMounted = false; };
-    }, [searchParams, navigate]);
+    }, [searchParams, navigate, incrementPaymentFailure]);
 
     return (
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg relative z-50 overflow-hidden">

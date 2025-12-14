@@ -81,7 +81,10 @@ const Payment = () => {
                 <p className="text-gray-500 mb-8 text-lg">Total: ₹{copies * 100}</p>
 
                 {/* DEBUG: Remove later */}
-                <p className="text-xs text-red-300 font-mono mb-2">Debug: Failures = {paymentFailureCount}</p>
+                <div className="text-xs text-red-300 font-mono mb-2 flex flex-col gap-1">
+                    <p>Debug: Failures = {paymentFailureCount}</p>
+                    <p>VER: NEW_CHECKOUT</p>
+                </div>
 
                 {error && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm font-medium animate-pulse">
