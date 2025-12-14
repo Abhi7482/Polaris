@@ -107,10 +107,7 @@ const Welcome = () => {
                         <Camera className="w-4 h-4" />
                         <span className="text-[10px] uppercase tracking-widest font-bold">THE DIGITAL PHOTOBOOTH</span>
                     </div>
-                    {/* Brand name is now just POLARIS */}
-                    <div className="text-[10px] sm:text-xs font-semibold text-polaris-muted tracking-widest uppercase">
-                        RAKSHITA R PATIL
-                    </div>
+
                     <h1
                         onClick={handleLogoClick}
                         className="text-5xl sm:text-6xl font-black tracking-tighter text-polaris-primary leading-tight cursor-default select-none active:scale-95 transition-transform"
