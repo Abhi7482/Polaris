@@ -8,7 +8,7 @@ import { HOSTED_API_URL } from '../config';
 
 const Welcome = () => {
     const navigate = useNavigate();
-    const { startSession, setCopies, copies } = useSession();
+    const { startSession, setCopies, copies, resetSession } = useSession();
     const [isLoading, setIsLoading] = useState(false);
 
     // Secure Exit State
@@ -16,8 +16,11 @@ const Welcome = () => {
     const [pin, setPin] = useState('');
     const [logoClicks, setLogoClicks] = useState(0);
 
-    // Wake up hosted backend on mount
+    // Wake up hosted backend on mount AND Reset Session
     React.useEffect(() => {
+        // Reset session state (failure counts, photos, etc.) whenever we hit the Welcome screen
+        if (resetSession) resetSession();
+
         const wakeUpBackend = async () => {
             try {
                 await axios.get(HOSTED_API_URL);

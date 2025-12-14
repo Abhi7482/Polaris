@@ -7,18 +7,31 @@ import { useSession } from '../context/SessionContext';
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { startSession, incrementPaymentFailure } = useSession(); // We might use this as fallback or context update
+    const { startSession, incrementPaymentFailure, paymentFailureCount } = useSession(); // We might use this as fallback or context update
     const [status, setStatus] = useState('verifying');
 
     useEffect(() => {
         let isMounted = true;
         let attempts = 0;
         const maxAttempts = 30; // 30 * 2s = 60 seconds timeout
+        // Guard to ensure we only count this failure once per page load
+        const hasIncrementedRef = { current: false };
+
+        const handleFailure = () => {
+            if (incrementPaymentFailure && !hasIncrementedRef.current) {
+                console.log("Incrementing failure count");
+                hasIncrementedRef.current = true;
+                incrementPaymentFailure();
+            }
+        };
 
         const verifyPayment = async () => {
             const transactionId = searchParams.get('merchantTransactionId');
             if (!transactionId) {
-                if (isMounted) setStatus('error');
+                if (isMounted) {
+                    setStatus('error');
+                    handleFailure();
+                }
                 return;
             }
 
@@ -50,13 +63,7 @@ const PaymentSuccess = () => {
                 } else if (res.data.status === 'FAILED') {
                     if (isMounted) {
                         setStatus('failed');
-                        // Track this as a failure so we can limit retries
-                        if (incrementPaymentFailure) {
-                            console.log("Incrementing failure count"); // Debug logging
-                            incrementPaymentFailure();
-                        } else {
-                            alert("CRITICAL ERROR: incrementPaymentFailure is missing!");
-                        }
+                        handleFailure();
                     }
                 } else {
                     // Still PENDING, retry
@@ -64,7 +71,10 @@ const PaymentSuccess = () => {
                         attempts++;
                         setTimeout(verifyPayment, 2000); // Retry in 2s
                     } else {
-                        if (isMounted) setStatus('timeout');
+                        if (isMounted) {
+                            setStatus('timeout');
+                            handleFailure();
+                        }
                     }
                 }
             } catch (err) {
@@ -74,7 +84,10 @@ const PaymentSuccess = () => {
                     attempts++;
                     setTimeout(verifyPayment, 2000);
                 } else {
-                    if (isMounted) setStatus('error');
+                    if (isMounted) {
+                        setStatus('error');
+                        handleFailure();
+                    }
                 }
             }
         };
@@ -83,6 +96,9 @@ const PaymentSuccess = () => {
 
         return () => { isMounted = false; };
     }, [searchParams, navigate, incrementPaymentFailure]);
+
+    // Derived state for max failures
+    const isMaxFailures = paymentFailureCount >= 2;
 
     return (
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg relative z-50 overflow-hidden">
@@ -114,35 +130,35 @@ const PaymentSuccess = () => {
                     </div>
                 )}
 
-                {status === 'failed' && (
+                {(status === 'failed' || status === 'error' || status === 'timeout') && (
                     <div className="text-gray-800">
                         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </div>
-                        <h2 className="text-3xl font-bold mb-4">Payment Failed</h2>
-                        <p className="mb-8 text-gray-500">We couldn't verify your payment.</p>
-                        <button
-                            onClick={() => navigate('/checkout')}
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-lg"
-                        >
-                            Try Again
-                        </button>
-                    </div>
-                )}
+                        <h2 className="text-3xl font-bold mb-4">
+                            {isMaxFailures ? "Session Failed" : "Payment Failed"}
+                        </h2>
+                        <p className="mb-8 text-gray-500">
+                            {isMaxFailures
+                                ? "Too many failed attempts. Returning to home..."
+                                : "We couldn't verify your payment."}
+                        </p>
 
-                {status === 'error' && (
-                    <div className="text-gray-800">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        </div>
-                        <h2 className="text-3xl font-bold mb-4">Something went wrong</h2>
-                        <p className="mb-8 text-gray-500">Please contact support.</p>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors"
-                        >
-                            Back to Home
-                        </button>
+                        {isMaxFailures ? (
+                            <button
+                                onClick={() => navigate('/')}
+                                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-lg"
+                            >
+                                Return Home
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate('/checkout')}
+                                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-lg"
+                            >
+                                Try Again ({paymentFailureCount}/2)
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
