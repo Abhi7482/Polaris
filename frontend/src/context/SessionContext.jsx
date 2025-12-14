@@ -49,25 +49,37 @@ export const SessionProvider = ({ children }) => {
     };
 
     const resetSession = async () => {
+        // 1. Reset LOCAL state immediately (Critical for UI consistency)
+        setSessionId(null);
+        setPhotos([]);
+        setOptions({ filter: 'color', frame: 'default' });
+        setCopies(2);
+        setRetakeCount(0);
+        setPaymentFailureCount(0);
+        sessionStorage.setItem('polaris_payment_failures', '0');
+
+        // 2. Sync with Backend (Best effort)
         try {
             await callApi('/session/reset', 'POST');
-            setSessionId(null);
-            setPhotos([]);
-            setOptions({ filter: 'color', frame: 'default' });
-            setCopies(2);
-            setRetakeCount(0);
-            setPaymentFailureCount(0);
-            sessionStorage.setItem('polaris_payment_failures', '0');
         } catch (err) {
-            console.error("Failed to reset session", err);
+            console.error("Failed to reset session on backend (ignoring for UI)", err);
         }
     };
+
+    const lastIncrementTime = React.useRef(0);
 
     const incrementRetake = () => {
         setRetakeCount(prev => prev + 1);
     };
 
     const incrementPaymentFailure = () => {
+        const now = Date.now();
+        if (now - lastIncrementTime.current < 2000) {
+            console.log("Ignored double increment (throttled)");
+            return;
+        }
+        lastIncrementTime.current = now;
+
         setPaymentFailureCount(prev => {
             const newVal = prev + 1;
             sessionStorage.setItem('polaris_payment_failures', newVal.toString());
