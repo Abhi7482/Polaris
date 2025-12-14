@@ -177,7 +177,7 @@ const PaymentSuccess = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/')}
-                                    className="w-full text-polaris-muted hover:text-polaris-primary font-medium text-xl md:text-2xl transition-colors py-4 underline underline-offset-4"
+                                    className="w-full btn-magnetic bg-white hover:bg-polaris-bg text-polaris-muted hover:text-polaris-primary font-bold py-6 rounded-3xl text-2xl md:text-3xl transition-all duration-300 ease-in-out shadow-lg border-2 border-transparent hover:border-polaris-accent/20"
                                 >
                                     Cancel & Return Home
                                 </button>
