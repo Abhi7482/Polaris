@@ -80,10 +80,9 @@ const Payment = () => {
                 <h2 className="text-3xl font-bold mb-2 text-gray-800">Checkout</h2>
                 <p className="text-gray-500 mb-8 text-lg">Total: ₹{copies * 100}</p>
 
-                {/* DEBUG: Remove later */}
+
                 <div className="text-xs text-red-300 font-mono mb-2 flex flex-col gap-1">
-                    <p>Debug: Failures = {paymentFailureCount}</p>
-                    <p>VER: NEW_CHECKOUT</p>
+
                 </div>
 
                 {error && (

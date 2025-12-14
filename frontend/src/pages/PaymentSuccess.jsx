@@ -161,11 +161,6 @@ const PaymentSuccess = () => {
                         )}
                     </div>
                 )}
-
-
-                <p className="text-xs text-gray-300 mt-4 absolute bottom-4 left-0 right-0">
-                    Debug: {status} | Count: {paymentFailureCount} | ID: {searchParams.get('merchantTransactionId')?.substring(0, 8)}
-                </p>
             </div>
         </div>
     );
