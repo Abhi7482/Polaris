@@ -101,7 +101,8 @@ async def create_order(request: CreateOrderRequest):
         pay_request = StandardCheckoutPayRequest.build_request(
             merchant_order_id=merchant_order_id,
             amount=request.amount,
-            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}"
+            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}",
+            expiresIn=120
         )
         
         # Execute Payment
