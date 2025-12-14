@@ -74,6 +74,8 @@ export const SessionProvider = ({ children }) => {
 
     const incrementPaymentFailure = useCallback(() => {
         const now = Date.now();
+        console.log(`[SessionContext] Incrementing failure. Current Time: ${now}, Last: ${lastIncrementTime.current}`);
+
         if (now - lastIncrementTime.current < 2000) {
             console.log("Ignored double increment (throttled)");
             return;
@@ -82,6 +84,7 @@ export const SessionProvider = ({ children }) => {
 
         setPaymentFailureCount(prev => {
             const newVal = prev + 1;
+            console.log(`[SessionContext] New Failure Count: ${newVal}`);
             sessionStorage.setItem('polaris_payment_failures', newVal.toString());
             return newVal;
         });
