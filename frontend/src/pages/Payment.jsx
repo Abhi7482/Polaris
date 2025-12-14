@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL, { HOSTED_API_URL } from '../config';
@@ -73,9 +74,12 @@ const Payment = () => {
                 {/* Back Button */}
                 <button
                     onClick={handleBack}
-                    className="absolute top-6 left-6 text-polaris-muted hover:text-polaris-text transition-colors duration-300 ease-in-out"
+                    className="absolute top-6 left-6 flex items-center gap-2 text-polaris-muted hover:text-polaris-primary transition-all duration-300 group"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                    <div className="p-2 rounded-full bg-polaris-bg/50 group-hover:bg-polaris-accent/20 transition-colors">
+                        <ArrowLeft className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium text-sm tracking-wide uppercase hidden sm:block">Back</span>
                 </button>
 
                 <h2 className="font-display text-2xl md:text-3xl font-light mb-4 text-polaris-text type-hero">Checkout</h2>
@@ -86,7 +90,7 @@ const Payment = () => {
                 </div>
 
                 {error && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-polaris-accent/20 text-polaris-primary p-3 rounded-xl mb-6 text-sm font-medium"
