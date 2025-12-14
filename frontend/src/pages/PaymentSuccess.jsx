@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { HOSTED_API_URL } from '../config';
@@ -9,13 +9,13 @@ const PaymentSuccess = () => {
     const navigate = useNavigate();
     const { startSession, incrementPaymentFailure, paymentFailureCount } = useSession(); // We might use this as fallback or context update
     const [status, setStatus] = useState('verifying');
+    // Guard to ensure we only count this failure once per page load
+    const hasIncrementedRef = useRef(false);
 
     useEffect(() => {
         let isMounted = true;
         let attempts = 0;
         const maxAttempts = 30; // 30 * 2s = 60 seconds timeout
-        // Guard to ensure we only count this failure once per page load
-        const hasIncrementedRef = { current: false };
 
         const handleFailure = () => {
             if (incrementPaymentFailure && !hasIncrementedRef.current) {

@@ -72,7 +72,7 @@ export const SessionProvider = ({ children }) => {
         setRetakeCount(prev => prev + 1);
     };
 
-    const incrementPaymentFailure = () => {
+    const incrementPaymentFailure = useCallback(() => {
         const now = Date.now();
         if (now - lastIncrementTime.current < 2000) {
             console.log("Ignored double increment (throttled)");
@@ -85,7 +85,7 @@ export const SessionProvider = ({ children }) => {
             sessionStorage.setItem('polaris_payment_failures', newVal.toString());
             return newVal;
         });
-    };
+    }, []);
 
     const updateOptions = async (newOptions) => {
         setOptions(prev => ({ ...prev, ...newOptions }));

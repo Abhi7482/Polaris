@@ -38,7 +38,6 @@ CLIENT_ID = os.getenv("CLIENT_ID", "SU2512111730364037739020")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "YOUR_CLIENT_SECRET_HERE") # User needs to set this in Render
 CLIENT_VERSION = int(os.getenv("CLIENT_VERSION", "1"))
 ENV_MODE = os.getenv("ENV", "PRODUCTION") # "SANDBOX" or "PRODUCTION"
-# Force Deploy v2.1 (Expiry Fix)
 ENV_ENUM = Env.PRODUCTION if ENV_MODE == "PRODUCTION" else Env.SANDBOX
 SHOULD_PUBLISH_EVENTS = False
 
@@ -102,8 +101,7 @@ async def create_order(request: CreateOrderRequest):
         pay_request = StandardCheckoutPayRequest.build_request(
             merchant_order_id=merchant_order_id,
             amount=request.amount,
-            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}",
-            expiresIn=120
+            redirect_url=f"{FRONTEND_URL}/payment-success?merchantTransactionId={merchant_order_id}"
         )
         
         # Execute Payment
