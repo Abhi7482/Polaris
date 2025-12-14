@@ -168,12 +168,20 @@ const PaymentSuccess = () => {
                                 Return Home
                             </button>
                         ) : (
-                            <button
-                                onClick={() => navigate('/checkout')}
-                                className="w-full btn-magnetic bg-polaris-primary hover:bg-polaris-text text-polaris-white font-semibold py-8 px-12 rounded-3xl text-3xl md:text-4xl transition-all duration-300 ease-in-out shadow-2xl"
-                            >
-                                Try Again ({paymentFailureCount}/2)
-                            </button>
+                            <div className="flex flex-col gap-6 w-full">
+                                <button
+                                    onClick={() => navigate('/checkout')}
+                                    className="w-full btn-magnetic bg-polaris-primary hover:bg-polaris-text text-polaris-white font-semibold py-8 px-12 rounded-3xl text-3xl md:text-4xl transition-all duration-300 ease-in-out shadow-2xl"
+                                >
+                                    Try Again ({paymentFailureCount}/2)
+                                </button>
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="w-full text-polaris-muted hover:text-polaris-primary font-medium text-xl md:text-2xl transition-colors py-4 underline underline-offset-4"
+                                >
+                                    Cancel & Return Home
+                                </button>
+                            </div>
                         )}
                     </motion.div>
                 )}
