@@ -7,37 +7,52 @@ import { useSession } from '../context/SessionContext';
 
 const Payment = () => {
     const navigate = useNavigate();
-    const { copies, startSession } = useSession();
+    const { copies } = useSession();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [failureCount, setFailureCount] = useState(0);
+
+    // Auto-redirect to Welcome if too many failures
+    useEffect(() => {
+        if (failureCount >= 3) {
+            const timer = setTimeout(() => {
+                navigate('/');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [failureCount, navigate]);
+
+    const handleBack = () => {
+        navigate('/');
+    };
 
     const handlePayment = async () => {
         setLoading(true);
         setError(null);
         try {
-            // Redirect URL: Where PhonePe sends the user after payment
-            // We want to come back to the PaymentSuccess page
             const redirectUrl = window.location.origin + "/payment-success";
-
-            // Amount is copies * 100 rupees * 100 paise
             const amountInPaise = copies * 100 * 100;
 
-            // Use Hosted Backend
             const res = await axios.post(`${HOSTED_API_URL}/create_order`, {
                 amount: amountInPaise,
-                copies: copies, // Send copies so backend can store it
-                redirect_url: redirectUrl // Optional if backend hardcodes it, but good to send
+                copies: copies,
+                redirect_url: redirectUrl
             });
 
             if (res.data.success && res.data.payment_url) {
-                // Redirect to PhonePe
                 window.location.href = res.data.payment_url;
             } else {
-                setError("Failed to initiate payment. Please try again.");
+                throw new Error("Payment initialization failed");
             }
         } catch (err) {
             console.error("Payment Error", err);
-            setError("Payment service unavailable.");
+            setFailureCount(prev => prev + 1);
+
+            if (failureCount >= 2) {
+                setError("Multiple failures detected. Redirecting to start...");
+            } else {
+                setError("Payment failed. Please tap to retry.");
+            }
         } finally {
             setLoading(false);
         }
@@ -50,21 +65,29 @@ const Payment = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-12 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4"
+                className="bg-white p-12 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4 relative"
             >
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Start Session</h2>
-                <p className="text-gray-500 mb-8">Pay ₹{copies * 100} to begin your photobooth experience.</p>
+                {/* Back Button */}
+                <button
+                    onClick={handleBack}
+                    className="absolute top-6 left-6 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                </button>
+
+                <h2 className="text-3xl font-bold mb-2 text-gray-800">Checkout</h2>
+                <p className="text-gray-500 mb-8 text-lg">Total: ₹{copies * 100}</p>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm font-medium animate-pulse">
                         {error}
                     </div>
                 )}
 
                 <button
                     onClick={handlePayment}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                    disabled={loading || failureCount >= 3}
+                    className="w-full bg-polaris-accent hover:bg-polaris-accent/90 text-white font-bold py-4 rounded-xl text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                 >
                     {loading ? (
                         <>
@@ -75,24 +98,20 @@ const Payment = () => {
                             Processing...
                         </>
                     ) : (
-                        "Pay Now with PhonePe"
+                        "Tap here to pay"
                     )}
                 </button>
 
-                <p className="mt-6 text-xs text-gray-400">
-                    Secured by PhonePe. Test Mode Active.
-                </p>
-
-                {/* Dev Bypass */}
+                {/* Dev Bypass (Hidden in Prod) */}
                 {import.meta.env.DEV && (
                     <button
                         onClick={async () => {
                             setLoading(true);
-                            const success = await startSession();
-                            if (success) navigate('/options');
+                            // Simulate successful payment flow locally
+                            navigate('/payment-success');
                             setLoading(false);
                         }}
-                        className="mt-4 text-xs text-red-300 hover:text-red-500 underline"
+                        className="mt-6 text-xs text-red-300 hover:text-red-500 underline"
                     >
                         [DEV] Skip Payment
                     </button>

@@ -8,7 +8,8 @@ import API_URL from '../config';
 
 const Review = () => {
     const navigate = useNavigate();
-    const { photos, options, resetSession, startSession, copies, callApi } = useSession();
+    const { photos, options, startSession, copies, callApi, retakeCount, incrementRetake } = useSession();
+    const [isPrinting, setIsPrinting] = useState(false);
     const [processedPath, setProcessedPath] = useState(null);
 
     useEffect(() => {
@@ -24,16 +25,21 @@ const Review = () => {
     }, []);
 
     const handlePrint = async () => {
+        if (isPrinting) return;
+        setIsPrinting(true);
         try {
             await callApi('/print', 'POST', { copies });
             navigate('/printing');
         } catch (err) {
             console.error("Print failed", err);
+            setIsPrinting(false);
         }
     };
 
     const handleRetake = async () => {
-        await resetSession();
+        if (retakeCount >= 1) return;
+        incrementRetake();
+        // restart capture flow explicitly
         await startSession();
         navigate('/options');
     };
@@ -50,11 +56,20 @@ const Review = () => {
                 </div>
 
                 <div className="flex flex-col gap-8 glass-subtle p-8 rounded-3xl">
-                    <Button onClick={handlePrint} className="w-72 text-lg shadow-xl">
-                        Print Now
+                    <Button
+                        onClick={handlePrint}
+                        className="w-72 text-lg shadow-xl"
+                        disabled={isPrinting}
+                    >
+                        {isPrinting ? "Sending..." : "Print Now"}
                     </Button>
-                    <Button onClick={handleRetake} variant="secondary" className="w-72 text-lg">
-                        Retake
+                    <Button
+                        onClick={handleRetake}
+                        variant="secondary"
+                        className="w-72 text-lg"
+                        disabled={retakeCount >= 1}
+                    >
+                        {retakeCount >= 1 ? "Retake Used" : "Retake"}
                     </Button>
                 </div>
             </div>

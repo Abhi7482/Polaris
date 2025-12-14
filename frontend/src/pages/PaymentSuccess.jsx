@@ -76,46 +76,67 @@ const PaymentSuccess = () => {
     }, [searchParams, navigate]);
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg text-center">
-            {status === 'verifying' && (
-                <div className="animate-pulse">
-                    <h2 className="text-2xl font-bold mb-2">Verifying Payment...</h2>
-                    <p>Please wait while we confirm your transaction.</p>
-                </div>
-            )}
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg relative z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-md -z-10" />
 
-            {status === 'success' && (
-                <div className="text-green-600">
-                    <h2 className="text-4xl font-bold mb-4">Payment Successful!</h2>
-                    <p className="text-xl">Starting your session...</p>
-                </div>
-            )}
+            <div
+                className="bg-white p-12 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4"
+            >
+                {status === 'verifying' && (
+                    <div className="animate-pulse">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-8 h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-800">Verifying Payment...</h2>
+                        <p className="text-gray-500">Please wait while we confirm your transaction.</p>
+                    </div>
+                )}
 
-            {status === 'failed' && (
-                <div className="text-red-600">
-                    <h2 className="text-3xl font-bold mb-4">Payment Failed</h2>
-                    <p className="mb-6">We couldn't verify your payment.</p>
-                    <button
-                        onClick={() => navigate('/payment')}
-                        className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            )}
+                {status === 'success' && (
+                    <div className="text-green-600">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4 text-gray-800">Payment Successful!</h2>
+                        <p className="text-xl text-gray-600">Starting your session...</p>
+                    </div>
+                )}
 
-            {status === 'error' && (
-                <div className="text-red-600">
-                    <h2 className="text-3xl font-bold mb-4">Something went wrong</h2>
-                    <p className="mb-6">Please contact support.</p>
-                    <button
-                        onClick={() => navigate('/')}
-                        className="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold"
-                    >
-                        Back to Home
-                    </button>
-                </div>
-            )}
+                {status === 'failed' && (
+                    <div className="text-gray-800">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4">Payment Failed</h2>
+                        <p className="mb-8 text-gray-500">We couldn't verify your payment.</p>
+                        <button
+                            onClick={() => navigate('/payment')}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-lg"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
+
+                {status === 'error' && (
+                    <div className="text-gray-800">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4">Something went wrong</h2>
+                        <p className="mb-8 text-gray-500">Please contact support.</p>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="bg-gray-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors"
+                        >
+                            Back to Home
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -9,6 +9,7 @@ export const SessionProvider = ({ children }) => {
     const [photos, setPhotos] = useState([]);
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
     const [copies, setCopies] = useState(2);
+    const [retakeCount, setRetakeCount] = useState(0);
 
     // Helper for API calls (supports both Web and Electron)
     const callApi = async (path, method = 'POST', body = null) => {
@@ -29,6 +30,7 @@ export const SessionProvider = ({ children }) => {
             const res = await callApi('/session/start', 'POST');
             setSessionId(res.data.session_id);
             setPhotos([]);
+            // Do NOT reset retakeCount here, so it persists across "Retake" calls
             return true;
         } catch (err) {
             console.error("Failed to start session", err);
@@ -43,9 +45,14 @@ export const SessionProvider = ({ children }) => {
             setPhotos([]);
             setOptions({ filter: 'color', frame: 'default' });
             setCopies(2);
+            setRetakeCount(0); // Reset retakes on full session reset
         } catch (err) {
             console.error("Failed to reset session", err);
         }
+    };
+
+    const incrementRetake = () => {
+        setRetakeCount(prev => prev + 1);
     };
 
     const updateOptions = async (newOptions) => {
@@ -66,8 +73,8 @@ export const SessionProvider = ({ children }) => {
 
     return (
         <SessionContext.Provider value={{
-            sessionId, photos, options, copies,
-            startSession, resetSession, updateOptions, addPhoto, setCopies, callApi
+            sessionId, photos, options, copies, retakeCount,
+            startSession, resetSession, updateOptions, addPhoto, setCopies, incrementRetake, callApi
         }}>
             {children}
         </SessionContext.Provider>
