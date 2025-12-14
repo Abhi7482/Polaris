@@ -19,7 +19,7 @@ function App() {
             <Router>
                 <Routes>
                     <Route path="/" element={<Welcome />} />
-                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/checkout" element={<Payment />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/options" element={<Options />} />
                     <Route path="/capture" element={<Capture />} />

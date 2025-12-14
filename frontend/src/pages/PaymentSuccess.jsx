@@ -117,7 +117,7 @@ const PaymentSuccess = () => {
                         <h2 className="text-3xl font-bold mb-4">Payment Failed</h2>
                         <p className="mb-8 text-gray-500">We couldn't verify your payment.</p>
                         <button
-                            onClick={() => navigate('/payment')}
+                            onClick={() => navigate('/checkout')}
                             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-lg"
                         >
                             Try Again
