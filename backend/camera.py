@@ -26,6 +26,15 @@ class CameraService:
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
         
+        # Optimize buffer size for real-time response (Fixes "floaty" lag)
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+        # Verify settings
+        actual_w = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        actual_h = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
+        logger.info(f"Camera Initialized: {actual_w}x{actual_h} @ {actual_fps} FPS. Backend: DSHOW")
+        
         # Auto exposure/WB are usually on by default, but can be forced here
         # self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3) # 3 is auto
         

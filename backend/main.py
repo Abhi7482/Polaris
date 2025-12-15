@@ -67,7 +67,13 @@ def generate_frames():
         frame = camera.get_frame()
         if frame is None:
             break
-        ret, buffer = cv2.imencode('.jpg', frame)
+        
+        if frame is None:
+            break
+        
+        # Stream at full resolution (1080p) but optimize JPEG quality to reduce lag
+        # Quality 85 is visually identical to 95 but much lighter on bandwidth
+        ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
