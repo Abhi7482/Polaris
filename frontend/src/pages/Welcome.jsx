@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
-import { Sparkles, ArrowRight, Camera, Zap } from 'lucide-react';
+import { ArrowRight, Camera, Zap, Star, ScanLine } from 'lucide-react';
 import axios from 'axios';
 import { HOSTED_API_URL } from '../config';
 
@@ -18,7 +18,6 @@ const Welcome = () => {
 
     // Wake up hosted backend on mount AND Reset Session
     React.useEffect(() => {
-        // Reset session state (failure counts, photos, etc.) whenever we hit the Welcome screen
         if (resetSession) resetSession();
 
         const wakeUpBackend = async () => {
@@ -34,9 +33,9 @@ const Welcome = () => {
 
     const handleLogoClick = () => {
         setLogoClicks(prev => prev + 1);
-        setTimeout(() => setLogoClicks(0), 2000); // Reset if not fast enough
+        setTimeout(() => setLogoClicks(0), 2000);
 
-        if (logoClicks >= 4) { // 5th click triggers
+        if (logoClicks >= 4) {
             setShowPinModal(true);
             setLogoClicks(0);
         }
@@ -68,189 +67,271 @@ const Welcome = () => {
         setIsLoading(false);
     };
 
-    // Stagger animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 15 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
+    // Animations
+    const fadeUp = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
     };
 
     return (
-        // Adjusted padding for better fit on 1080p height
-        <div className="relative h-screen w-full flex flex-col items-center justify-center py-4 px-4 overflow-hidden font-sans">
+        // Added select-none to prevent highlighting and blocked context menu
+        <div
+            className="relative h-screen w-full flex overflow-hidden font-sans bg-polaris-bg select-none"
+            onContextMenu={(e) => e.preventDefault()}
+        >
 
-            {/* --- Background Elements & Grain (Using existing glass-panel definition) --- */}
+            {/* --- Background Texture --- */}
             <div className="bg-noise" />
-            <div className="absolute inset-0 overflow-hidden -z-10">
-                <div className="absolute top-[-20%] left-[-20%] w-[350px] h-[350px] bg-polaris-accent/30 rounded-full blur-[80px] animate-blob mix-blend-multiply" />
-                <div className="absolute bottom-[-20%] right-[-20%] w-[300px] h-[300px] bg-white/40 rounded-full blur-[80px] animate-blob animation-delay-2000" />
-            </div>
 
-            {/* --- Main Unified Glass Card - Optimized for Height --- */}
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                // Stronger background for the glass panel for contrast
-                className="relative w-full max-w-xl flex flex-col items-center shadow-2xl rounded-[2.5rem] h-full max-h-[900px] p-6 sm:p-8 bg-white/60 backdrop-blur-2xl border border-white/80"
-            >
-                {/* --- 1. Header (Updated Branding) --- */}
-                <motion.div variants={itemVariants} className="text-center space-y-1 mb-4">
-                    <div className="inline-flex items-center gap-2 text-polaris-primary/70">
-                        <Camera className="w-4 h-4" />
-                        <span className="text-[10px] uppercase tracking-widest font-bold">THE DIGITAL PHOTOBOOTH</span>
+            {/* --- LEFT PANEL: The "Showcase Stage" (65% Width) --- */}
+            <div className="relative w-[65%] h-full bg-[#F0ECE6] flex items-center justify-center overflow-hidden pointer-events-none">
+
+                {/* 1. Technical Viewfinder Overlay (Purely Aesthetic) */}
+                <div className="absolute inset-8 border border-polaris-muted/10 rounded-[3rem] z-0">
+                    {/* Corner Markers */}
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-polaris-muted/30 rounded-tl-xl" />
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-polaris-muted/30 rounded-tr-xl" />
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-polaris-muted/30 rounded-bl-xl" />
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-polaris-muted/30 rounded-br-xl" />
+
+                    {/* Center Crosshair */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 opacity-20">
+                        <div className="absolute top-1/2 left-0 w-full h-[1px] bg-polaris-muted" />
+                        <div className="absolute left-1/2 top-0 h-full w-[1px] bg-polaris-muted" />
                     </div>
 
-                    <h1
-                        onClick={handleLogoClick}
-                        className="text-5xl sm:text-6xl font-black tracking-tighter text-polaris-primary leading-tight cursor-default select-none active:scale-95 transition-transform"
-                    >
-                        POLARIS
-                    </h1>
-                    <p className="text-base text-polaris-text/80 font-medium max-w-sm mx-auto">
-                        Snap, process, and get studio-quality results in under a minute.
-                    </p>
-                </motion.div>
+                    {/* Labels */}
+                    <div className="absolute top-6 left-8 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-polaris-muted/60 uppercase">
+                        <ScanLine size={14} />
+                        <span>System Check: Optimal</span>
+                    </div>
+                    <div className="absolute bottom-6 right-8 text-[10px] font-bold tracking-[0.2em] text-polaris-muted/40 uppercase">
+                        Sample Output // Not Actual Size
+                    </div>
+                </div>
 
-                {/* --- 2. Full-Length Image Showcase (Strict Height) --- */}
-                <motion.div variants={itemVariants} className="relative h-[300px] sm:h-[350px] flex justify-center items-center gap-1 sm:gap-2 my-2 w-full">
+                {/* 2. Ambient Lighting */}
+                <div className="absolute top-[-20%] left-[20%] w-[600px] h-[600px] bg-polaris-accent/20 rounded-full blur-[100px] animate-blob mix-blend-multiply opacity-50" />
+
+                {/* 3. Levitating Gallery */}
+                <div className="relative w-full h-full flex justify-center items-center">
                     {[1, 2, 3].map((i, index) => {
                         const isCenter = index === 1;
+                        const yOffset = isCenter ? 0 : index === 0 ? -40 : 40;
+                        const delay = index * 2;
+
                         return (
                             <motion.div
                                 key={i}
-                                initial={{ opacity: 0, scale: 0.8 }}
+                                initial={{ opacity: 0, y: 100 }}
                                 animate={{
                                     opacity: 1,
-                                    scale: isCenter ? 1 : 0.95,
-                                    zIndex: isCenter ? 10 : 1,
-                                    y: isCenter ? -10 : 0
+                                    y: [yOffset, yOffset - 15, yOffset],
                                 }}
-                                transition={{ delay: 0.3 + (index * 0.1), type: "spring", stiffness: 100, damping: 20 }}
-                                whileHover={{ y: -20, scale: 1.05, zIndex: 20, transition: { duration: 0.3 } }}
-
-                                // Photostrip styling
-                                className={`aspect-portrait h-full p-1 bg-white rounded-xl border-[3px] border-polaris-primary/10 shadow-lg overflow-hidden transition-all duration-300 ease-out cursor-pointer ${isCenter ? 'shadow-polaris-primary/20' : 'opacity-90'}`}
+                                transition={{
+                                    opacity: { duration: 1, delay: 0.2 * index },
+                                    y: { duration: 6, repeat: Infinity, ease: "easeInOut", delay: delay }
+                                }}
+                                className={`relative mx-[-20px] ${isCenter ? 'z-20 scale-110' : 'z-10 scale-90 opacity-80'}`}
                             >
-                                <img
-                                    src={`/assets/showcase_${i}.png`}
-                                    alt={`Portrait ${i}`}
-                                    // CRITICAL: object-contain ensures the image's entire vertical length is shown.
-                                    className="w-full h-full object-contain bg-polaris-accent/10 rounded-lg"
-                                />
+                                <div className="relative group">
+                                    <div className={`
+                                        h-[65vh] aspect-[2/6] p-2 bg-white rounded-lg shadow-2xl overflow-hidden
+                                        ${isCenter ? 'shadow-polaris-primary/20 ring-1 ring-black/5' : 'grayscale-[20%] blur-[0.5px]'}
+                                    `}>
+                                        <img
+                                            src={`/assets/showcase_${i}.png`}
+                                            alt="Sample"
+                                            draggable={false} // Prevents image dragging
+                                            className="w-full h-full object-contain bg-polaris-bg/30 rounded-[4px] select-none pointer-events-none"
+                                        />
+
+                                        <div className="absolute bottom-4 left-0 w-full text-center">
+                                            <span className="text-[9px] font-bold tracking-[0.3em] text-polaris-muted/40 uppercase">
+                                                Exhibit {i.toString().padStart(2, '0')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </motion.div>
-                        )
+                        );
                     })}
+                </div>
+            </div>
+
+            {/* --- RIGHT PANEL: The "Command Deck" (35% Width) --- */}
+            <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="relative w-[35%] h-full bg-white/90 backdrop-blur-3xl border-l border-white shadow-[-20px_0_60px_rgba(91,74,62,0.08)] flex flex-col justify-between p-10 z-30"
+            >
+                {/* 1. Header Area */}
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={fadeUp}
+                    className="space-y-6 mt-4"
+                >
+                    <div>
+                        <div className="flex items-center gap-2 text-polaris-primary/60 mb-2">
+                            <Camera size={18} />
+                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Automatic Photo Booth</span>
+                        </div>
+                        <h1
+                            onClick={handleLogoClick}
+                            className="text-8xl font-black tracking-tighter text-polaris-primary leading-[0.85] cursor-default select-none -ml-1 hover:opacity-80 transition-opacity"
+                        >
+                            POLARIS
+                        </h1>
+                    </div>
+
+                    <p className="text-xl text-polaris-text/70 font-medium leading-relaxed max-w-sm">
+                        Experience the new standard. <br />
+                        <span className="text-polaris-primary font-bold">Studio quality, instantly.</span>
+                    </p>
+
+                    <div className="flex gap-3 pt-2">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-polaris-primary/5 rounded-lg border border-polaris-primary/10 text-xs font-bold text-polaris-primary uppercase tracking-wider">
+                            <Star size={12} fill="currentColor" /> Premium Paper
+                        </span>
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-polaris-primary/5 rounded-lg border border-polaris-primary/10 text-xs font-bold text-polaris-primary uppercase tracking-wider">
+                            <Zap size={12} fill="currentColor" /> AI Enhanced
+                        </span>
+                    </div>
                 </motion.div>
 
-                {/* --- 3. Interactive Controls --- */}
-                <div className="flex flex-col w-full flex-grow mt-4 justify-between space-y-4">
+                {/* 2. Middle: Interactions */}
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={fadeUp}
+                    className="flex-grow flex flex-col justify-center space-y-8"
+                >
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end px-1">
+                            <label className="text-sm font-bold text-polaris-muted uppercase tracking-[0.2em]">Select Quantity</label>
+                            <span className="text-xs font-semibold text-polaris-primary/40">Glossy Finish</span>
+                        </div>
 
-                    {/* Feature Highlight Chips */}
-                    <motion.div variants={itemVariants} className="flex justify-center gap-3 text-xs text-polaris-text font-medium border-b border-polaris-primary/5 pb-3">
-                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Zap size={14} className='text-polaris-primary' /> 60 Second Process</span>
-                        <span className='flex items-center gap-1 px-3 py-1 bg-polaris-accent/30 rounded-full'><Sparkles size={14} className='text-polaris-primary' /> Retouch Included</span>
-                    </motion.div>
-
-                    {/* Copy Selector (Sliding Pill) */}
-                    <motion.div variants={itemVariants} className="space-y-2">
-                        <label className="text-sm font-medium text-polaris-text block uppercase tracking-wider text-center">Select your print quantity</label>
-                        <div className="flex bg-polaris-muted/10 p-1 rounded-xl border border-white/50">
-                            {[2, 3, 4].map((num) => (
+                        <div className="grid grid-cols-2 gap-4">
+                            {[2, 4].map((num) => (
                                 <button
                                     key={num}
                                     onClick={() => setCopies(num)}
-                                    className="flex-1 relative py-1.5 text-sm font-medium z-10 focus:outline-none"
+                                    className={`relative group h-36 rounded-2xl border-2 transition-all duration-300 ease-out flex flex-col items-center justify-center gap-2 overflow-hidden ${copies === num
+                                        ? 'bg-polaris-primary border-polaris-primary shadow-xl shadow-polaris-primary/30 scale-105 z-10'
+                                        : 'bg-white border-polaris-muted/20 hover:border-polaris-primary/40 hover:bg-polaris-bg'
+                                        }`}
                                 >
+                                    <span className={`text-5xl font-black transition-colors ${copies === num ? 'text-white' : 'text-polaris-primary'}`}>
+                                        {num}
+                                    </span>
+                                    <span className={`text-[10px] uppercase tracking-widest font-bold transition-colors ${copies === num ? 'text-white/80' : 'text-polaris-muted'}`}>
+                                        Prints
+                                    </span>
+
+                                    {/* Active Corner Accent */}
                                     {copies === num && (
-                                        <motion.div
-                                            layoutId="selector-pill"
-                                            className="absolute inset-0 bg-white rounded-lg shadow-md border border-polaris-primary/10 -z-10"
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
+                                        <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-pulse" />
                                     )}
-                                    <div className={`flex flex-col items-center leading-tight transition-colors ${copies === num ? 'text-polaris-primary font-bold' : 'text-polaris-muted hover:text-polaris-text'}`}>
-                                        <span className="text-lg leading-none">{num}</span>
-                                        <span className="text-[9px] uppercase tracking-wider font-normal opacity-70">Prints</span>
-                                    </div>
                                 </button>
                             ))}
                         </div>
-                    </motion.div>
-
-                    {/* Price & CTA Block */}
-                    <motion.div variants={itemVariants} className="mt-4 flex flex-col gap-2">
-                        <div className="text-center">
-                            <span className="text-4xl font-black text-polaris-primary tracking-tight">₹{copies * 100}</span>
-                            <p className="text-polaris-muted text-xs uppercase tracking-widest mt-1">TOTAL</p>
-                        </div>
-
-                        <button
-                            onClick={handleStart}
-                            disabled={isLoading}
-                            className="group relative overflow-hidden w-full bg-polaris-primary text-white rounded-xl py-3.5 px-8 mt-2 font-bold text-lg tracking-wide transition-all duration-300 hover:shadow-xl hover:shadow-polaris-primary/30 active:scale-[0.99]"
-                        >
-                            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
-                            <div className="flex items-center justify-center gap-2">
-                                {isLoading ? 'Processing Photo...' : 'Start Session & Get Prints'}
-                                {!isLoading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
-                            </div>
-                        </button>
-                    </motion.div>
-                </div>
-
-                {/* --- Footer Links --- */}
-                <motion.footer variants={itemVariants} className="pt-2 w-full text-center text-polaris-muted/80">
-                    <div className="flex justify-center gap-8 text-xs font-semibold tracking-wide">
-                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors py-2 px-2">About</button>
-                        <span className="opacity-20 py-2">•</span>
-                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors py-2 px-2">Policies</button>
                     </div>
-                </motion.footer>
+                </motion.div>
+
+                {/* 3. Bottom: Action */}
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={fadeUp}
+                    className="space-y-6 mb-4"
+                >
+                    <div className="flex items-center justify-between border-t-2 border-dashed border-polaris-primary/10 pt-6">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-polaris-muted uppercase tracking-widest">Total Price</span>
+                            <span className="text-xs text-polaris-muted/60">Inclusive of all taxes</span>
+                        </div>
+                        <div className="text-6xl font-black text-polaris-primary tracking-tighter">
+                            ₹{copies * 100}
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleStart}
+                        disabled={isLoading}
+                        className="group relative w-full bg-polaris-primary text-white h-24 rounded-2xl overflow-hidden shadow-2xl shadow-polaris-primary/20 transition-transform active:scale-[0.98]"
+                    >
+                        {/* Shimmer Effect */}
+                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
+
+                        <div className="relative z-20 flex items-center justify-between px-8 h-full">
+                            <div className="text-left">
+                                <span className="block text-2xl font-black uppercase tracking-tight leading-none">Tap to Start</span>
+                                <span className="text-sm text-white/60 font-medium">Ready to capture</span>
+                            </div>
+                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:translate-x-2 transition-transform duration-300">
+                                {isLoading ? (
+                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <ArrowRight size={24} />
+                                )}
+                            </div>
+                        </div>
+                    </button>
+
+                    {/* Footer Links */}
+                    <div className="flex justify-center gap-6 text-[10px] uppercase tracking-widest font-bold text-polaris-muted/50">
+                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors">Policies</button>
+                        <span>•</span>
+                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">Help</button>
+                    </div>
+                </motion.div>
+
             </motion.div>
 
             {/* PIN Modal */}
             {showPinModal && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-80">
-                        <h3 className="text-xl font-bold mb-4 text-center">Admin Exit</h3>
-                        <form onSubmit={handlePinSubmit} className="space-y-4">
+                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white p-10 rounded-3xl shadow-2xl w-[450px] border border-white/20"
+                    >
+                        <h3 className="text-3xl font-black mb-2 text-center text-polaris-primary">SYSTEM EXIT</h3>
+                        <p className="text-center text-polaris-muted mb-8 text-sm uppercase tracking-widest">Authorized Personnel Only</p>
+
+                        <form onSubmit={handlePinSubmit} className="space-y-6">
                             <input
                                 type="password"
                                 value={pin}
                                 onChange={(e) => setPin(e.target.value)}
-                                placeholder="Enter PIN"
-                                className="w-full p-3 border rounded-lg text-center text-2xl tracking-widest"
+                                placeholder="• • • •"
+                                className="w-full h-20 border-2 border-polaris-muted/20 rounded-2xl text-center text-4xl tracking-[1em] focus:border-polaris-primary focus:outline-none transition-colors"
                                 autoFocus
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowPinModal(false)}
-                                    className="flex-1 py-3 bg-gray-200 rounded-lg font-medium"
+                                    className="flex-1 h-16 bg-gray-100 rounded-xl font-bold text-lg text-polaris-text uppercase tracking-wider hover:bg-gray-200 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-red-600 text-white rounded-lg font-medium"
+                                    className="flex-1 h-16 bg-red-600 text-white rounded-xl font-bold text-lg uppercase tracking-wider hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30"
                                 >
                                     Exit
                                 </button>
                             </div>
                         </form>
-                    </div>
+                    </motion.div>
                 </div>
             )}
         </div>
     );
 };
 
-export default Welcome; 
+export default Welcome;

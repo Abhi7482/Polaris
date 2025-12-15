@@ -240,8 +240,13 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     # Determine Color Mode
     is_bw = (session.selected_filter == "bw")
     
-    background_tasks.add_task(printer.print_image, final_output_path, request.copies, is_bw)
-    return {"status": "printing_started", "copies": request.copies}
+    # LOGIC UPDATE: 1 Physical Page = 2 Strips (4x6 Cut)
+    # If user wants 2 copies (strips) -> Print 1 Page
+    # If user wants 4 copies (strips) -> Print 2 Pages
+    physical_copies = max(1, request.copies // 2)
+    
+    background_tasks.add_task(printer.print_image, final_output_path, physical_copies, is_bw)
+    return {"status": "printing_started", "copies": request.copies, "physical_prints": physical_copies}
 
 # --- Kiosk Heartbeat ---
 import asyncio
