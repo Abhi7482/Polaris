@@ -1,45 +1,68 @@
 import cv2
 import logging
 import time
+import pythoncom
+import win32com.client
 
 logger = logging.getLogger(__name__)
 
 class CameraService:
-    def __init__(self, device_index=0):
-        self.device_index = device_index
+    def __init__(self, target_hw_id="USB\\VID_054C&PID_0A92&MI_00\\6&39913BBE&1&0000"):
+        self.device_index = 0
+        self.target_hw_id = target_hw_id.upper()
         self.cap = None
         self.is_open = False
 
+    def _resolve_device_index(self):
+        """
+        Queries Windows WMI to find the index of the camera with the specific Hardware ID.
+        Assumes OpenCV indices match the order of 'usbvideo' devices in PnP enumeration.
+        """
+        try:
+            # Initialize COM for the thread if needed (FastAPI runs in threads)
+            pythoncom.CoInitialize()
+            
+            wmi = win32com.client.GetObject("winmgmts:")
+            # Filter for USB Video Class devices only
+            devices = wmi.ExecQuery("SELECT * FROM Win32_PnPEntity WHERE Service='usbvideo'")
+            
+            for i, dev in enumerate(devices):
+                dev_id = dev.DeviceID.upper()
+                # Check for exact match or substring match if user provided partial
+                if self.target_hw_id in dev_id:
+                    logger.info(f"Target Camera Found at Index {i}: {dev.Caption} ({dev_id})")
+                    return i
+            
+            logger.warning(f"Target Camera ID {self.target_hw_id} not found in WMI list. Defaulting to 0.")
+            return 0
+            
+        except Exception as e:
+            logger.error(f"Failed to resolve camera index via WMI: {e}")
+            return 0
+        finally:
+            pythoncom.CoUninitialize()
+
     def start(self):
+        # Resolve index dynamically on start
+        self.device_index = self._resolve_device_index()
+        
         logger.info(f"Attempting to open camera at index {self.device_index}")
         self.cap = cv2.VideoCapture(self.device_index, cv2.CAP_DSHOW) # CAP_DSHOW for faster init on Windows
+        
         if not self.cap.isOpened():
-            logger.error("Could not open camera")
+            logger.error(f"Could not open camera at index {self.device_index}")
             self.is_open = False
             return False
         
-        # Force MJPEG compression (Vital for 1080p @ 30fps on USB 2.0)
-        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-        
-        # Set resolution to 1080p (Full HD)
+        # Set resolution to 1080p
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        self.cap.set(cv2.CAP_PROP_FPS, 30)
         
-        # Optimize buffer size for real-time response (Fixes "floaty" lag)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-        # Verify settings
-        actual_w = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        actual_h = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
-        logger.info(f"Camera Initialized: {actual_w}x{actual_h} @ {actual_fps} FPS. Backend: DSHOW")
-        
-        # Auto exposure/WB are usually on by default, but can be forced here
-        # self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3) # 3 is auto
+        # Disable Auto-Sleep/PowerSave if possible? 
+        # (OpenCV doesn't control this, but accessing it keeps it awake)
         
         self.is_open = True
-        logger.info("Camera started successfully")
+        logger.info(f"Camera started successfully at index {self.device_index}")
         return True
 
     def get_frame(self):
