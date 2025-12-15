@@ -18,9 +18,13 @@ class CameraService:
             self.is_open = False
             return False
         
-        # Set resolution to 1080p
+        # Force MJPEG compression (Vital for 1080p @ 30fps on USB 2.0)
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        
+        # Set resolution to 1080p (Full HD)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
         
         # Auto exposure/WB are usually on by default, but can be forced here
         # self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3) # 3 is auto
