@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import PhotoStrip from '../components/PhotoStrip';
-import Button from '../components/Button';
 import { useSession } from '../context/SessionContext';
+import { Printer, RefreshCcw, Check, AlertCircle, ArrowRight, Lock } from 'lucide-react';
 import axios from 'axios';
 import API_URL from '../config';
 
 const Review = () => {
     const navigate = useNavigate();
-    const { photos, options, startSession, copies, callApi, retakeCount, incrementRetake } = useSession();
+    const { photos, startSession, copies, callApi, retakeCount, incrementRetake } = useSession();
     const [isPrinting, setIsPrinting] = useState(false);
     const [processedPath, setProcessedPath] = useState(null);
 
+    // --- Backend Processing (Preserved) ---
     useEffect(() => {
         const processStrip = async () => {
             try {
@@ -39,41 +41,153 @@ const Review = () => {
     const handleRetake = async () => {
         if (retakeCount >= 1) return;
         incrementRetake();
-        // restart capture flow explicitly
         await startSession();
-        navigate('/options');
+        navigate('/options'); // Assuming flow goes back to options or capture
+    };
+
+    // --- Animations ---
+    const panelVariants = {
+        hidden: { x: "100%" },
+        visible: { x: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg p-8 gap-12 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-polaris-bg via-white/50 to-polaris-bg -z-10" />
+        <div className="relative h-screen w-full flex overflow-hidden font-sans bg-polaris-bg select-none">
 
-            <h2 className="text-5xl font-bold text-polaris-text mb-4 tracking-tight z-10">Review Your Strip</h2>
+            {/* --- Background Texture --- */}
+            <div className="bg-noise" />
 
-            <div className="flex gap-20 items-center z-10">
-                <div className="glass-intense p-4 rounded-xl shadow-2xl rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
-                    <PhotoStrip photos={photos} />
+            {/* ================= LEFT PANEL: Digital Lightbox (65%) ================= */}
+            <div className="relative w-[65%] h-full flex flex-col items-center justify-center bg-[#E5E2DD]">
+
+                {/* Ambient Glow */}
+                <div className="absolute inset-0 bg-radial-gradient from-white/40 to-transparent opacity-50 pointer-events-none" />
+
+                {/* Header / Context */}
+                <div className="absolute top-12 left-12 z-10">
+                    <div className="flex items-center gap-3 opacity-60">
+                        <div className="w-2 h-2 bg-polaris-primary rounded-full animate-pulse" />
+                        <span className="text-xs font-bold tracking-[0.2em] text-polaris-primary uppercase">Digital Proof</span>
+                    </div>
                 </div>
 
-                <div className="flex flex-col gap-8 glass-subtle p-8 rounded-3xl">
-                    <Button
-                        onClick={handlePrint}
-                        className="w-72 text-lg shadow-xl"
-                        disabled={isPrinting}
-                    >
-                        {isPrinting ? "Sending..." : "Print Now"}
-                    </Button>
-                    <Button
-                        onClick={handleRetake}
-                        variant="secondary"
-                        className="w-72 text-lg"
-                        disabled={retakeCount >= 1}
-                    >
-                        {retakeCount >= 1 ? "Retake Used" : "Retake"}
-                    </Button>
-                </div>
+                {/* The Strip Container */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="relative z-20 max-h-[80vh] flex flex-col items-center justify-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]"
+                >
+                    {/* We wrap the PhotoStrip in a constrained div to ensure it fits the UI.
+                        The 'glass-optical' class adds that subtle lens effect over the strip.
+                     */}
+                    <div className="p-3 bg-white rounded-lg border border-white/40 ring-1 ring-black/5">
+                        <div className="overflow-hidden rounded-[2px] w-[260px] md:w-[300px]">
+                            <PhotoStrip photos={photos} />
+                        </div>
+                    </div>
+
+
+                </motion.div>
             </div>
-        </div>
+
+
+            {/* ================= RIGHT PANEL: Command Station (35%) ================= */}
+            <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={panelVariants}
+                className="relative w-[35%] h-full bg-white/90 backdrop-blur-3xl border-l border-white shadow-2xl flex flex-col justify-between p-10 z-30"
+            >
+                {/* 1. Header Information */}
+                <div className="space-y-6 mt-6">
+                    <div>
+                        <span className="text-xs font-bold text-polaris-muted uppercase tracking-[0.2em] mb-2 block">Step 3 of 4</span>
+                        <h1 className="text-6xl font-black text-polaris-primary tracking-tighter leading-none">
+                            Review<br />Result
+                        </h1>
+                    </div>
+
+                    <div className="p-6 bg-polaris-bg/50 rounded-2xl border border-polaris-muted/10">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-bold text-polaris-muted uppercase tracking-wider">Print Order</span>
+                            <span className="text-xs font-bold bg-polaris-primary/10 text-polaris-primary px-2 py-1 rounded">READY</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-black text-polaris-primary">{copies}</span>
+                            <span className="text-sm font-medium text-polaris-muted">Copies Selected</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Primary Actions */}
+                <div className="flex flex-col gap-5 mb-8">
+
+                    {/* PRINT BUTTON (Primary) */}
+                    <button
+                        onClick={handlePrint}
+                        disabled={isPrinting}
+                        className="group relative w-full bg-polaris-primary text-white h-28 rounded-2xl overflow-hidden shadow-2xl shadow-polaris-primary/20 transition-all active:scale-[0.98] hover:shadow-polaris-primary/40"
+                    >
+                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
+
+                        <div className="relative z-20 flex items-center justify-between px-8 h-full">
+                            <div className="flex items-center gap-6">
+                                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center">
+                                    <Printer size={28} />
+                                </div>
+                                <div className="text-left flex flex-col">
+                                    <span className="text-2xl font-black uppercase tracking-tight leading-none">Print Photos</span>
+                                    <span className="text-sm text-white/60 font-medium mt-1">
+                                        {isPrinting ? "Sending to printer..." : "Confirm & Finish"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {!isPrinting && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
+                            {isPrinting && <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                        </div>
+                    </button>
+
+                    {/* RETAKE BUTTON (Secondary) */}
+                    <button
+                        onClick={handleRetake}
+                        disabled={retakeCount >= 1}
+                        className={`
+                            relative w-full h-24 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between px-8
+                            ${retakeCount >= 1
+                                ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-80'
+                                : 'bg-white border-polaris-muted/20 hover:border-polaris-primary hover:bg-polaris-bg/30 text-polaris-primary'
+                            }
+                        `}
+                    >
+                        <div className="flex items-center gap-6">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${retakeCount >= 1 ? 'bg-gray-200 text-gray-400' : 'bg-polaris-accent/20 text-polaris-primary'}`}>
+                                {retakeCount >= 1 ? <Lock size={20} /> : <RefreshCcw size={20} />}
+                            </div>
+                            <div className="text-left flex flex-col">
+                                <span className={`text-xl font-bold uppercase tracking-tight leading-none ${retakeCount >= 1 ? 'text-gray-400' : 'text-polaris-primary'}`}>
+                                    Retake Photo
+                                </span>
+                                <span className={`text-xs font-bold tracking-wider uppercase mt-1 ${retakeCount >= 1 ? 'text-red-400' : 'text-polaris-muted'}`}>
+                                    {retakeCount >= 1 ? "Limit Reached" : "1 Attempt Remaining"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {retakeCount >= 1 && (
+                            <AlertCircle size={24} className="text-gray-300" />
+                        )}
+                    </button>
+
+                    {/* Policy Note */}
+                    <p className="text-center text-[10px] text-polaris-muted/50 uppercase tracking-widest font-semibold mt-2">
+                        By printing, you agree to our Terms of Service
+                    </p>
+
+                </div>
+            </motion.div>
+        </div >
     );
 };
 
