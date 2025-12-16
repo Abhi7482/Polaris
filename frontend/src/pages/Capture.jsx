@@ -81,8 +81,8 @@ const Capture = () => {
             </div>
 
             {/* Right: Live Strip */}
-            <div className="w-[400px] flex items-center justify-center glass-subtle rounded-[2.5rem] shadow-xl">
-                <div className="scale-90 origin-center">
+            <div className="w-[400px] flex items-center justify-center glass-subtle rounded-[2.5rem] shadow-xl p-8">
+                <div className="w-[260px] relative shadow-2xl">
                     <PhotoStrip photos={photos} />
                 </div>
             </div>

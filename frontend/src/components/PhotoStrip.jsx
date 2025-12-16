@@ -62,8 +62,8 @@ const PhotoStrip = ({ photos = [] }) => {
         <div
             className="relative bg-white shadow-2xl overflow-hidden"
             style={{
-                width: '300px',
-                height: '900px', // 1:3 AR
+                width: '100%',
+                aspectRatio: '1/3', // Maintains strip proportions
             }}
         >
             {/* 1. Photos Layer (Underneath Frame) */}

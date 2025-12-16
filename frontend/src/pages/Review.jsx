@@ -81,21 +81,13 @@ const Review = () => {
                     {/* We wrap the PhotoStrip in a constrained div to ensure it fits the UI.
                         The 'glass-optical' class adds that subtle lens effect over the strip.
                      */}
-                    <div className="p-4 bg-white rounded-lg border border-white/40 ring-1 ring-black/5">
-                        <div className="overflow-hidden rounded-[2px] min-w-[300px]">
+                    <div className="p-4 bg-white rounded-lg border border-white/40 ring-1 ring-black/5 inline-block">
+                        <div className="overflow-hidden rounded-[2px] h-[75vh] w-auto aspect-[1/3] shadow-lg">
                             <PhotoStrip photos={photos} />
                         </div>
                     </div>
 
-                    {/* "Verified" Badge Overlay */}
-                    <motion.div
-                        initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.6, type: "spring" }}
-                        className="absolute -bottom-6 -right-6 bg-polaris-primary text-white p-4 rounded-full shadow-lg border-4 border-white flex items-center justify-center"
-                    >
-                        <Check size={24} strokeWidth={4} />
-                    </motion.div>
+
                 </motion.div>
             </div>
 
