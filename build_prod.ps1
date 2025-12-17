@@ -33,12 +33,14 @@ if ($?) {
     # Verify EXE exists
     if (Test-Path "dist/polaris-backend.exe") {
         Write-Host "Backend EXE created successfully." -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Error "Backend EXE not found!"
         exit 1
     }
     cd ..
-} else {
+}
+else {
     Write-Error "Could not find backend directory."
     exit 1
 }
@@ -61,13 +63,15 @@ if ($?) {
     if ($?) {
         Write-Host "Packaging Complete!" -ForegroundColor Green
         Write-Host "Installer is located in: frontend/dist-electron/" -ForegroundColor Cyan
-    } else {
+    }
+    else {
         Write-Error "Packaging Failed!"
         exit 1
     }
     
     cd ..
-} else {
+}
+else {
     Write-Error "Could not find frontend directory."
     exit 1
 }
