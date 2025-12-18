@@ -66,6 +66,9 @@ class PrinterService:
         
         target_name = "EPSON L3210 Series" # Default / Color
         
+        logger.info(f"--- PRINT REQUEST DEBUG ---")
+        logger.info(f"is_bw flag: {is_bw}")
+
         if is_bw:
             # Check if BW printer exists
             # We assume it was named "EPSON L3210 BW"

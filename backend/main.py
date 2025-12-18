@@ -239,6 +239,9 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     
     # Determine Color Mode
     is_bw = (session.selected_filter == "bw")
+    logger.info(f"--- PRINT ENDPOINT DEBUG ---")
+    logger.info(f"Session Filter: '{session.selected_filter}'")
+    logger.info(f"Combined is_bw: {is_bw}")
     
     # LOGIC UPDATE: 1 Physical Page = 2 Strips (4x6 Cut)
     # If user wants 2 copies (strips) -> Print 1 Page

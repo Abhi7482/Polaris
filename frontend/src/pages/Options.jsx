@@ -44,7 +44,7 @@ const TiltButton = ({ isSelected, onClick, title, subtitle, color }) => {
             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <span className="relative z-10 text-xl font-light tracking-wide">{title}</span>
-            <span className={`relative z-10 text-[0.6rem] uppercase tracking-[0.3em] mt-1 opacity-70 transition-colors ${isSelected ? 'text-[#CBBFAF]' : 'text-[#8A8077]'}`}>
+            <span className={`relative z-10 text-xs font-medium uppercase tracking-[0.2em] mt-1 opacity-90 transition-colors ${isSelected ? 'text-[#CBBFAF]' : 'text-[#8A8077]'}`}>
                 {subtitle}
             </span>
 
