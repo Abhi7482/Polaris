@@ -214,8 +214,8 @@ const Welcome = () => {
                             <span className="text-xs font-semibold text-polaris-primary/40">Glossy Finish</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            {[2, 4].map((num) => (
+                        <div className="grid grid-cols-3 gap-3">
+                            {[2, 4, 6].map((num) => (
                                 <button
                                     key={num}
                                     onClick={() => setCopies(num)}
