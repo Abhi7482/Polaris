@@ -8,7 +8,18 @@ export const SessionProvider = ({ children }) => {
     const [sessionId, setSessionId] = useState(null);
     const [photos, setPhotos] = useState([]);
     const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
-    const [copies, setCopies] = useState(2);
+    const [copies, setCopiesState] = useState(() => {
+        try {
+            return parseInt(sessionStorage.getItem('polaris_copies') || '2', 10);
+        } catch (e) {
+            return 2;
+        }
+    });
+
+    const setCopies = (val) => {
+        setCopiesState(val);
+        sessionStorage.setItem('polaris_copies', val.toString());
+    };
     const [retakeCount, setRetakeCount] = useState(0);
     // Initialize from sessionStorage to survive refreshes
     const [paymentFailureCount, setPaymentFailureCount] = useState(() => {

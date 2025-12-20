@@ -8,7 +8,7 @@ import { useSession } from '../context/SessionContext';
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { startSession, incrementPaymentFailure, paymentFailureCount } = useSession(); // We might use this as fallback or context update
+    const { setCopies, incrementPaymentFailure, paymentFailureCount } = useSession(); // We might use this as fallback or context update
     const [status, setStatus] = useState('verifying');
     // Guard to ensure we only count this failure once per page load
     const hasIncrementedRef = useRef(false);
@@ -44,12 +44,17 @@ const PaymentSuccess = () => {
                     if (isMounted) {
                         setStatus('success');
 
+                        // CRITICAL: Sync Local State with PAID Order Details
+                        const paidCopies = res.data.copies || 2;
+                        console.log(`Payment Verified. Updating Copies to: ${paidCopies}`);
+                        if (setCopies) setCopies(paidCopies);
+
                         // Trigger Local Session
                         if (window.polarisLocal && window.polarisLocal.api) {
                             // Use the generic API bridge we created
                             await window.polarisLocal.api('start_session', {
                                 id: transactionId,
-                                copies: res.data.copies || 1
+                                copies: paidCopies
                             });
                         } else if (window.polarisLocal && window.polarisLocal.startSession) {
                             // Legacy fallback

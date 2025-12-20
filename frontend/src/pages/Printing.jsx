@@ -30,7 +30,7 @@ const Printing = () => {
 
             <div className="glass-intense px-16 py-12 rounded-[3rem] text-center shadow-2xl border border-white/60">
                 <h2 className="text-6xl font-bold text-polaris-text mb-6 tracking-tight">Printing...</h2>
-                <p className="text-2xl text-polaris-muted font-light">Please collect your photo outside.</p>
+                <p className="text-2xl text-polaris-muted font-light">Please collect your photo below in the tray .</p>
 
                 <div className="mt-12 w-96 h-4 bg-polaris-card/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
                     <motion.div
