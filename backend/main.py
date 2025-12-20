@@ -33,17 +33,48 @@ printer = PrinterService()
 processor = ImageProcessor()
 state_manager = StateManager()
 
-# Ensure output directories exist
-os.makedirs("captures", exist_ok=True)
-os.makedirs("prints", exist_ok=True)
+# --- CONFIGURATION: STORAGE ---
+# User requested saving to Desktop for persistence
+# We use ABSOLUTE paths for file operations, but RELATIVE paths ("captures/x.jpg") for URLs/State.
 
-# Mount Static Files
-app.mount("/captures", StaticFiles(directory="captures"), name="captures")
-app.mount("/prints", StaticFiles(directory="prints"), name="prints")
+USER_DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
+BASE_OUTPUT_DIR = os.path.join(USER_DESKTOP, "Polaris Output")
+
+CAPTURES_DIR = os.path.join(BASE_OUTPUT_DIR, "captures")
+PRINTS_DIR = os.path.join(BASE_OUTPUT_DIR, "prints")
+
+# Ensure dirs exist
+os.makedirs(CAPTURES_DIR, exist_ok=True)
+os.makedirs(PRINTS_DIR, exist_ok=True)
+
+# Mount as standard URLs (backend maps URL path -> Desktop folder)
+app.mount("/captures", StaticFiles(directory=CAPTURES_DIR), name="captures")
+app.mount("/prints", StaticFiles(directory=PRINTS_DIR), name="prints")
 
 @app.on_event("startup")
 async def startup_event():
+    # 1. Start Hardware
     camera.start()
+    
+    # 2. Cleanup Old Files (Retention: 24 Hours)
+    try:
+        retention_seconds = 86400 # 24 Hours
+        now = time.time()
+        
+        cleanup_dirs = [CAPTURES_DIR, PRINTS_DIR] # Scan the Desktop folders
+        count = 0
+        
+        for d in cleanup_dirs:
+            if os.path.exists(d):
+                for f in os.listdir(d):
+                    fp = os.path.join(d, f)
+                    if os.path.isfile(fp) and os.stat(fp).st_mtime < (now - retention_seconds):
+                        os.remove(fp)
+                        count += 1
+                        
+        logger.info(f"Startup Cleanup: Removed {count} old files from Desktop storage.")
+    except Exception as e:
+        logger.error(f"Cleanup failed: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -94,11 +125,15 @@ async def capture_photo():
     if not session:
         raise HTTPException(status_code=400, detail="No active session")
     
-    filename = f"captures/{session.session_id}_{len(session.photos)+1}.jpg"
-    success = camera.capture_photo(filename)
+    # RELATIVE Name for Web/State
+    rel_filename = f"captures/{session.session_id}_{len(session.photos)+1}.jpg"
+    # ABSOLUTE Path for Saving
+    abs_filepath = os.path.join(CAPTURES_DIR, f"{session.session_id}_{len(session.photos)+1}.jpg")
+    
+    success = camera.capture_photo(abs_filepath)
     if success:
-        state_manager.add_photo(filename)
-        return {"status": "captured", "path": filename, "count": len(session.photos)}
+        state_manager.add_photo(rel_filename) # Store RELATIVE for frontend
+        return {"status": "captured", "path": rel_filename, "count": len(session.photos)}
     else:
         raise HTTPException(status_code=500, detail="Capture failed")
 
@@ -157,7 +192,7 @@ async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"
                         nh = sh * scale_y
                         
                         # 2. Pad (Inflate)
-                        # Ensure we don't go negative on x/y (though CSS handles overflow hidden usually)
+                        # Ensure we don't go negative on x/y
                         nx = max(0, nx - TARGET_PADDING)
                         ny = max(0, ny - TARGET_PADDING)
                         nw += (TARGET_PADDING * 2)
@@ -171,7 +206,6 @@ async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"
 
         # 2. Fallback
         if not slots:
-            # Revert to legacy logic manually since processor logic is internal
              fallback_key = "vintage" if frame_id in ["vintage", "drunken_monkey"] else "regular"
              slots = processor.legacy_coordinates.get(fallback_key, processor.legacy_coordinates["regular"])
         
@@ -191,22 +225,40 @@ async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"
     except Exception as e:
         logger.error(f"Layout fetch error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/process")
 async def process_photos():
     session = state_manager.get_state()
     if not session or len(session.photos) < 4:
         raise HTTPException(status_code=400, detail="Session incomplete")
     
-    output_path = f"prints/{session.session_id}_final.jpg"
+    # 1. Resolve Input Paths (Web Relative -> Desktop Absolute)
+    # session.photos has ["captures/x.jpg", ...]
+    # We strip "captures/" and join with CAPTURES_DIR (Desktop)
+    # OR we just basename it safely.
+    input_paths_abs = []
+    for rel_p in session.photos:
+        # rel_p is "captures/uuid_1.jpg"
+        basename = os.path.basename(rel_p)
+        abs_p = os.path.join(CAPTURES_DIR, basename)
+        input_paths_abs.append(abs_p)
+
+    # 2. Prepare Output Path (Desktop)
+    filename_final = f"{session.session_id}_final.jpg"
+    output_path_abs = os.path.join(PRINTS_DIR, filename_final)
+    
+    # 3. Process
     result_path = processor.create_strip(
-        session.photos, 
-        output_path=output_path, 
+        input_paths_abs, 
+        output_path=output_path_abs, 
         filter_type=session.selected_filter,
         frame_id=session.selected_frame
     )
     
+    # 4. Return Relative Path for Frontend
     if result_path:
-        return {"status": "processed", "path": result_path}
+        output_path_rel = f"prints/{filename_final}"
+        return {"status": "processed", "path": output_path_rel}
     else:
         raise HTTPException(status_code=500, detail="Processing failed")
 
@@ -219,19 +271,21 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     if not session:
         raise HTTPException(status_code=400, detail="No active session")
     
+    # Locate Source on Desktop
+    filename_final = f"{session.session_id}_final.jpg"
+    print_path_abs = os.path.join(PRINTS_DIR, filename_final)
     
-    # Create 4x6 layout for printing
-    # Source is the usually generated final strip
-    print_path = f"prints/{session.session_id}_final.jpg"
-    print_path_4x6 = f"prints/{session.session_id}_print_4x6.png"
+    # Prepare 4x6 Output on Desktop
+    filename_4x6 = f"{session.session_id}_print_4x6.png"
+    print_path_4x6_abs = os.path.join(PRINTS_DIR, filename_4x6)
     
-    # Generate the 4x6 composite (Process synchronously here or in bg task? Sync is safer for file existence)
-    # Check if source exists first
-    if not os.path.exists(print_path):
-        logger.error(f"Source strip not found: {print_path}")
+    # Check if source exists
+    if not os.path.exists(print_path_abs):
+        logger.error(f"Source strip not found: {print_path_abs}")
         raise HTTPException(status_code=400, detail="Photo strip not generated yet")
 
-    final_output_path = processor.create_4x6_layout(print_path, print_path_4x6)
+    # Sync Generation
+    final_output_path = processor.create_4x6_layout(print_path_abs, print_path_4x6_abs)
     
     if not final_output_path or not os.path.exists(final_output_path):
         logger.error("Failed to generate 4x6 print layout")
@@ -247,6 +301,10 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     # If user wants 2 copies (strips) -> Print 1 Page
     # If user wants 4 copies (strips) -> Print 2 Pages
     physical_copies = max(1, request.copies // 2)
+
+    logger.info(f"--- COPIES DEBUG ---")
+    logger.info(f"Request (Strips): {request.copies}")
+    logger.info(f"Physical Sheets (4x6): {physical_copies}")
     
     background_tasks.add_task(printer.print_image, final_output_path, physical_copies, is_bw)
     return {"status": "printing_started", "copies": request.copies, "physical_prints": physical_copies}

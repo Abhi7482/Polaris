@@ -121,6 +121,11 @@ class PrinterService:
                 hDC.EndDoc()
                 hDC.DeleteDC()
                 
+                logger.info(f"Finished Copy {i+1}/{copies}")
+                import time
+                time.sleep(2) # Safety delay for printer queue
+
+                
             logger.info(f"Sent {copies} copies to {printer_name}")
             return True
             

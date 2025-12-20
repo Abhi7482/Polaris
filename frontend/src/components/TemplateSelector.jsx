@@ -9,6 +9,7 @@ const templates = {
         { id: 'After Dark Pop', name: 'After Dark', desc: 'Neon Pop', hex: '#2C2C2C' },
         { id: 'Blue Royale', name: 'Blue Royale', desc: 'Royal Tones', hex: '#1E3A8A' },
         { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
+        { id: 'Christmas', name: 'Christmas', desc: 'Holiday Special', hex: '#C41E3A' },
     ],
     bw: [
         { id: 'Classic Black', name: 'Classic Black', desc: 'Timeless', hex: '#1a1a1a' },
