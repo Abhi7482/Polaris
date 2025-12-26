@@ -1,6 +1,29 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 
+// --- DEFINE SPECIAL FRAMES METADATA ---
+const specialFramesLookup = {
+    'Pink Royale Inso': { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
+    'Classic Insomania': { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
+    'Vintage Insomania': { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
+};
+
+// --- HARDCODED SPECIAL EVENT CONFIG ---
+// To restore original: Uncomment the original templates object below and remove this one.
+const templates = {
+    color: [
+        { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
+        { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
+        { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
+    ],
+    bw: [
+        { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
+        { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
+        { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
+    ]
+};
+
+/* ORIGINAL TEMPLATES (SAVED)
 const templates = {
     color: [
         { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
@@ -17,6 +40,7 @@ const templates = {
         { id: 'Drunken Monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#505050' },
     ]
 };
+*/
 
 // --- SUB-COMPONENT: SWIPE INDICATOR ---
 const SwipeIndicator = () => (
@@ -139,7 +163,9 @@ const FrameCard = ({ template, isSelected, onClick, filterType }) => {
 
 // --- MAIN SELECTOR COMPONENT ---
 const TemplateSelector = ({ selected, onSelect, filterType = 'color' }) => {
+    // Directly use the hardcoded templates
     const currentTemplates = templates[filterType] || templates.color;
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollRef = useRef(null);
 

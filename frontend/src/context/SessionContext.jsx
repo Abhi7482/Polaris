@@ -49,6 +49,7 @@ export const SessionProvider = ({ children }) => {
             const res = await callApi('/session/start', 'POST');
             setSessionId(res.data.session_id);
             setPhotos([]);
+            setOptions({ filter: 'color', frame: 'default' }); // RESET OPTIONS FOR NEW SESSION
             // Do NOT reset retakeCount here
             setPaymentFailureCount(0);
             sessionStorage.setItem('polaris_payment_failures', '0');
@@ -102,11 +103,17 @@ export const SessionProvider = ({ children }) => {
     }, []);
 
     const updateOptions = async (newOptions) => {
-        setOptions(prev => ({ ...prev, ...newOptions }));
+        // ROBUST FIX: Merge current state with new options to ensure we ALWAYS send both fields.
+        // This prevents the backend from receiving partial updates (e.g. only frame) 
+        // which might cause it to default the missing field (filter) to "color".
+        const nextOptions = { ...options, ...newOptions };
+
+        setOptions(nextOptions);
+
         try {
             await callApi('/session/options', 'POST', {
-                filter_type: newOptions.filter,
-                frame_id: newOptions.frame
+                filter_type: nextOptions.filter,
+                frame_id: nextOptions.frame
             });
         } catch (err) {
             console.error("Failed to update options", err);
@@ -120,11 +127,11 @@ export const SessionProvider = ({ children }) => {
     return (
         <SessionContext.Provider value={{
             sessionId, photos, options, copies, retakeCount, paymentFailureCount,
-            startSession, resetSession, updateOptions, addPhoto, setCopies, incrementRetake, incrementPaymentFailure, callApi
+            startSession, resetSession, updateOptions, addPhoto, setCopies, incrementRetake, incrementPaymentFailure, callApi, setOptions
         }}>
             {children}
         </SessionContext.Provider>
-    );
+    ); // Exposed setOptions
 };
 
 export const useSession = () => useContext(SessionContext);

@@ -293,18 +293,15 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     
     # Determine Color Mode
     is_bw = (session.selected_filter == "bw")
-    logger.info(f"--- PRINT ENDPOINT DEBUG ---")
-    logger.info(f"Session Filter: '{session.selected_filter}'")
-    logger.info(f"Combined is_bw: {is_bw}")
     
     # LOGIC UPDATE: 1 Physical Page = 2 Strips (4x6 Cut)
     # If user wants 2 copies (strips) -> Print 1 Page
     # If user wants 4 copies (strips) -> Print 2 Pages
     physical_copies = max(1, request.copies // 2)
 
-    logger.info(f"--- COPIES DEBUG ---")
-    logger.info(f"Request (Strips): {request.copies}")
-    logger.info(f"Physical Sheets (4x6): {physical_copies}")
+    logger.info(f"--- PRINT REQUEST ---")
+    logger.info(f"Session ID: {session.session_id} | Filter: {session.selected_filter} | BW: {is_bw}")
+    logger.info(f"Copies: {request.copies} -> Physical Sheets: {physical_copies}")
     
     background_tasks.add_task(printer.print_image, final_output_path, physical_copies, is_bw)
     return {"status": "printing_started", "copies": request.copies, "physical_prints": physical_copies}

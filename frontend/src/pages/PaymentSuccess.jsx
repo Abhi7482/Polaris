@@ -8,7 +8,7 @@ import { useSession } from '../context/SessionContext';
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { setCopies, incrementPaymentFailure, paymentFailureCount } = useSession(); // We might use this as fallback or context update
+    const { setCopies, incrementPaymentFailure, paymentFailureCount, setOptions } = useSession(); // We might use this as fallback or context update
     const [status, setStatus] = useState('verifying');
     // Guard to ensure we only count this failure once per page load
     const hasIncrementedRef = useRef(false);
@@ -62,6 +62,9 @@ const PaymentSuccess = () => {
                         } else {
                             console.warn("Polaris Local Bridge not found.");
                         }
+
+                        // Forced Reset of Options to ensure UI matches Backend defaults
+                        if (setOptions) setOptions({ filter: 'color', frame: 'default' });
 
                         // Delay for UX then navigate
                         setTimeout(() => navigate('/options'), 2000);

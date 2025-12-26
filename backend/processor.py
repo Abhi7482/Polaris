@@ -26,6 +26,12 @@ class ImageProcessor:
                 (99, 1351, 1701, 1142),
                 (99, 2599, 1701, 1142),
                 (99, 3846, 1701, 1142)
+            ],
+            "Christmas": [
+                (104, 105, 1667, 1141),
+                (104, 1351, 1667, 1142),
+                (104, 2599, 1667, 1142),
+                (104, 3846, 1667, 1142)
             ]
         }
         # In-memory cache for detected slots to avoid re-processing every time
@@ -98,18 +104,20 @@ class ImageProcessor:
                 # Use absolute path to ensure we find it regardless of CWD
                 template_path = os.path.join(self.base_dir, "assets", "frames", filter_type, template_filename)
             
-            # 2. Try Auto-Detection if template exists
-            if template_path and os.path.exists(template_path):
+            # 2. Try Auto-Detection if template exists (and not explicitly hardcoded)
+            if template_path and os.path.exists(template_path) and frame_id not in self.legacy_coordinates:
                 detected_slots = self.detect_slots(template_path)
                 if detected_slots:
                     logger.info(f"Using auto-detected slots for {frame_id}")
             
             # 3. Fallback to Legacy/Hardcoded if auto-detection failed or not applicable
+            using_legacy = False
             if not detected_slots:
                 logger.info(f"Fallback to legacy coordinates for {frame_id}")
                 # Use vintage coords as default fallback for unknown IDs, or regular for standard
                 fallback_key = "vintage" if frame_id in ["vintage", "drunken_monkey"] else "regular"
                 detected_slots = self.legacy_coordinates.get(fallback_key, self.legacy_coordinates["regular"])
+                using_legacy = True
 
             # 4. Process Photos
             current_slots = detected_slots 
@@ -118,7 +126,7 @@ class ImageProcessor:
             scale_x = 1.0
             scale_y = 1.0
             
-            if template_path and os.path.exists(template_path):
+            if template_path and os.path.exists(template_path) and not using_legacy:
                 try:
                     with Image.open(template_path) as tmp_img:
                         src_w, src_h = tmp_img.size

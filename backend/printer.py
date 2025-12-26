@@ -36,6 +36,41 @@ class PrinterService:
             logger.error(f"Failed to query WMI for printer ID: {e}")
         return None
 
+    def _resolve_printer_name(self, target_name):
+        """
+        Finds the actual installed printer name that matches or contains the target_name.
+        This handles cases where the printer might be named "EPSON L3210 BW (Copy 1)"
+        """
+        try:
+            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+            
+            # 1. Exact Match
+            for p in printers:
+                if target_name.lower() == p.lower():
+                    return p
+            
+            # 2. Fuzzy Match (Contains)
+            # We explicitly look for "BW" if target is BW
+            is_target_bw = "bw" in target_name.lower()
+            
+            for p in printers:
+                if target_name.lower() in p.lower():
+                    # Sanity check: If looking for normal, exclude BW
+                    # If looking for BW, ensure it has BW
+                    if is_target_bw and "bw" not in p.lower():
+                        continue
+                    if not is_target_bw and "bw" in p.lower():
+                        continue
+                        
+                    return p
+            
+            logger.warning(f"Printer '{target_name}' not found in installed printers: {printers}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to enumerate printers: {e}")
+            return None
+
     def get_printer(self):
         # 1. Try to resolves name by Hardware ID first (User Request)
         hw_name = self._find_printer_by_hardware_id()
@@ -43,20 +78,7 @@ class PrinterService:
              self.printer_name = hw_name
 
         # 2. Verify this name exists in system printers
-        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-        
-        # Exact match check
-        for p in printers:
-            if self.printer_name.lower() == p.lower():
-                return p
-        
-        # Fuzzy match check
-        for p in printers:
-            if self.printer_name.lower() in p.lower():
-                logger.info(f"Fuzzy matching '{self.printer_name}' to '{p}'")
-                return p
-                
-        return None
+        return self._resolve_printer_name(self.printer_name)
 
     def print_image(self, image_path, copies=1, is_bw=False):
         # DUAL PRINTER STRATEGY
@@ -64,31 +86,41 @@ class PrinterService:
         # This allows the User to specifically configure "EPSON L3210 BW" with 
         # Grayscale presets in Windows, completely separate from the Color one.
         
-        target_name = "EPSON L3210 Series" # Default / Color
+        target_name_key = "EPSON L3210 Series" # Default / Color
         
         logger.info(f"--- PRINT REQUEST DEBUG ---")
         logger.info(f"is_bw flag: {is_bw}")
 
         if is_bw:
             # Check if BW printer exists
-            # We assume it was named "EPSON L3210 BW"
-            bw_name = "EPSON L3210 BW"
-            target_name = bw_name
-            logger.info(f"Mode is Black & White -> Selected Printer: {target_name}")
+            # We assume it is named roughly "EPSON L3210 BW"
+            target_name_key = "EPSON L3210 BW"
+            logger.info(f"Mode is Black & White -> Looking for Printer matching: {target_name_key}")
         else:
-            logger.info(f"Mode is Color -> Selected Printer: {target_name}")
+            logger.info(f"Mode is Color -> Looking for Printer matching: {target_name_key}")
 
-        # Basic verification it exists (optional but good)
-        # We can just rely on CreateDC failing if it doesn't
-        printer_name = target_name
-            
+        # Resolve actual system name
+        printer_name = self._resolve_printer_name(target_name_key)
+        
+        if not printer_name:
+            logger.error(f"CRITICAL: Could not find a printer matching '{target_name_key}'. Printing aborted.")
+            # Fallback to default if BW not found?
+            # Maybe safe to fallback to Color printer for BW content than fail?
+            if is_bw:
+                logger.info("Attempting fallback to Color printer...")
+                printer_name = self._resolve_printer_name("EPSON L3210 Series")
+                if not printer_name:
+                     return False
+            else:
+                return False
+
         try:
             # SIMPLIFIED STRATEGY:
             # We rely 100% on the User's Saved Default Settings (The Preset).
             # We do NOT touch DEVMODE, because doing so often resets private driver settings
             # (like Borderless, Glossy, Print Preview status, etc).
             
-            logger.info(f"Printing to {printer_name} using System Default Settings (Preset)")
+            logger.info(f"Printing {copies} copies to '{printer_name}' using System Default Settings")
 
             for i in range(copies):
                 # Standard DC Creation uses the User's Default Preferences automatically
@@ -126,7 +158,7 @@ class PrinterService:
                 time.sleep(2) # Safety delay for printer queue
 
                 
-            logger.info(f"Sent {copies} copies to {printer_name}")
+            logger.info(f"Successfully sent {copies} copies to {printer_name}")
             return True
             
         except Exception as e:
