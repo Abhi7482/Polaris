@@ -12,12 +12,12 @@ const specialFramesLookup = {
 // To restore original: Uncomment the original templates object below and remove this one.
 const templates = {
     color: [
-        { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
+        { id: 'Techno', name: 'Techno', desc: 'Special Edition', hex: '#000000' },
         { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
         { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
     ],
     bw: [
-        { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
+        { id: 'Techno', name: 'Techno', desc: 'Special Edition', hex: '#000000' },
         { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
         { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
     ]
