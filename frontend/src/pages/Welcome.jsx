@@ -10,6 +10,7 @@ const Welcome = () => {
     const navigate = useNavigate();
     const { startSession, setCopies, copies, resetSession } = useSession();
     const [isLoading, setIsLoading] = useState(false);
+    const [cameraStatus, setCameraStatus] = useState({ connected: false, name: 'Checking...' });
 
     // Secure Exit State
     const [showPinModal, setShowPinModal] = useState(false);
@@ -29,6 +30,24 @@ const Welcome = () => {
             }
         };
         wakeUpBackend();
+    }, []);
+
+    // Camera Status Polling
+    React.useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const res = await axios.get('http://localhost:8000/status');
+                setCameraStatus({
+                    connected: res.data.camera,
+                    name: res.data.camera_name || 'Unknown'
+                });
+            } catch (e) {
+                setCameraStatus({ connected: false, name: 'Error' });
+            }
+        };
+        checkStatus();
+        const interval = setInterval(checkStatus, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleLogoClick = () => {
@@ -83,6 +102,8 @@ const Welcome = () => {
             {/* --- Background Texture --- */}
             <div className="bg-noise" />
 
+            {/* CAMERA STATUS OVERLAY - REMOVED FOR INTEGRATION */}
+
             {/* --- LEFT PANEL: The "Showcase Stage" (65% Width) --- */}
             <div className="relative w-[65%] h-full bg-[#F0ECE6] flex items-center justify-center overflow-hidden pointer-events-none">
 
@@ -101,9 +122,17 @@ const Welcome = () => {
                     </div>
 
                     {/* Labels */}
-                    <div className="absolute top-6 left-8 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-polaris-muted/60 uppercase">
+                    <div className={`absolute top-6 left-8 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors duration-300 ${cameraStatus.connected && cameraStatus.name.includes('CEVCECM')
+                            ? 'text-polaris-muted/60'
+                            : 'text-red-500 animate-pulse'
+                        }`}>
                         <ScanLine size={14} />
-                        <span>System Check: Optimal</span>
+                        <span>
+                            {cameraStatus.name === 'Checking...' ? 'SYSTEM CHECK: INITIALIZING' :
+                                !cameraStatus.connected ? 'SYSTEM CHECK: CAMERA OFFLINE' :
+                                    !cameraStatus.name.includes('CEVCECM') ? `SYSTEM CHECK: WRONG CAMERA (${cameraStatus.name.substring(0, 10)}...)` :
+                                        'SYSTEM CHECK: OPTIMAL (SONY CEVM)'}
+                        </span>
                     </div>
                     <div className="absolute bottom-6 right-8 text-[10px] font-bold tracking-[0.2em] text-polaris-muted/40 uppercase">
                         Sample Output // Not Actual Size

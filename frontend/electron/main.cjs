@@ -75,16 +75,10 @@ const createWindow = () => {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        // Load Hosted URL in Production
-        mainWindow.loadURL(HOSTED_URL);
-
-        // Handle failed loads (e.g. no internet)
-        mainWindow.webContents.on('did-fail-load', () => {
-            console.log('Failed to load hosted URL, retrying in 5s...');
-            setTimeout(() => {
-                mainWindow.loadURL(HOSTED_URL);
-            }, 5000);
-        });
+        // Load Local Dist in Production (Offline Mode)
+        const indexPath = path.join(__dirname, '../dist/index.html');
+        console.log('Loading app from:', indexPath);
+        mainWindow.loadFile(indexPath);
     }
 };
 
