@@ -5,12 +5,12 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "npx vite",
-    "build": "npx vite build",
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build",
     "lint": "eslint .",
-    "preview": "npx vite preview",
-    "electron:dev": "concurrently \"npx vite\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
-    "package": "npx vite build && electron-builder"
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "electron:dev": "concurrently \"node ./node_modules/vite/bin/vite.js\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
+    "package": "node ./node_modules/vite/bin/vite.js build && electron-builder"
   },
   "build": {
     "appId": "com.polaris.photobooth",
