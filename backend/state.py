@@ -1,12 +1,12 @@
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List
 import uuid
 
 class SessionState(BaseModel):
     session_id: str
-    photos: List[str] = []
+    photos: List[str] = Field(default_factory=list)
     selected_filter: str = "color" # color, bw
-    selected_frame: str = "default"
+    selected_frame: str = "Classic Black"
     is_printing: bool = False
     is_complete: bool = False
 

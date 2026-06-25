@@ -12,6 +12,12 @@ const Payment = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Bypass state
+    const [tapCount, setTapCount] = useState(0);
+    const [showPinDialog, setShowPinDialog] = useState(false);
+    const [pinInput, setPinInput] = useState('');
+    const [pinError, setPinError] = useState(false);
+
     // Auto-redirect to Welcome if too many failures
     useEffect(() => {
         if (paymentFailureCount >= 2) {
@@ -24,6 +30,40 @@ const Payment = () => {
 
     const handleBack = () => {
         navigate('/');
+    };
+
+    const handleMarginTap = () => {
+        setTapCount(prev => {
+            const nextCount = prev + 1;
+            if (nextCount >= 8) {
+                setShowPinDialog(true);
+                return 0; // Reset
+            }
+            return nextCount;
+        });
+    };
+
+    const handlePinSubmit = async (e) => {
+        e.preventDefault();
+        if (pinInput === '6361615410') {
+            setShowPinDialog(false);
+            setPinInput('');
+            setPinError(false);
+            setLoading(true);
+            try {
+                // Trigger bypass
+                await startSession();
+                navigate('/options');
+            } catch (err) {
+                console.error("Bypass failed", err);
+                setError("Bypass session startup failed");
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            setPinError(true);
+            setPinInput('');
+        }
     };
 
     const handlePayment = async () => {
@@ -62,14 +102,17 @@ const Payment = () => {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg relative z-50 overflow-hidden">
+        <div 
+            onClick={handleMarginTap}
+            className="h-screen w-screen flex flex-col items-center justify-center bg-polaris-bg relative z-50 overflow-hidden"
+        >
             <div className="absolute inset-0 bg-polaris-accent/5 backdrop-blur-sm -z-10" />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="glass-optical p-12 md:p-20 rounded-[3rem] text-center max-w-4xl w-full mx-8 relative font-sans"
+                className="glass-optical p-12 md:p-20 rounded-[3rem] text-center max-w-4xl w-full mx-8 relative font-sans z-10"
             >
                 {/* Back Button */}
                 <button
@@ -132,6 +175,55 @@ const Payment = () => {
                     </button>
                 )}
             </motion.div>
+
+            {/* Admin PIN Dialog Overlay */}
+            {showPinDialog && (
+                <div 
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-50"
+                >
+                    <motion.div
+                        onClick={(e) => e.stopPropagation()}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass-optical p-10 rounded-[2rem] max-w-md w-full mx-6 text-center shadow-2xl relative"
+                    >
+                        <h3 className="font-display text-3xl font-light text-polaris-text mb-6">Enter Admin PIN</h3>
+                        <form onSubmit={handlePinSubmit} className="space-y-6">
+                            <input
+                                type="password"
+                                value={pinInput}
+                                onChange={(e) => setPinInput(e.target.value)}
+                                className={`w-full py-4 px-6 rounded-2xl text-2xl text-center border-2 bg-white/50 text-[#5B4A3E] focus:outline-none transition-all duration-300 ${pinError ? 'border-red-500 bg-red-50' : 'border-[#E8DED4] focus:border-[#5B4A3E]'}`}
+                                placeholder="••••••••••"
+                                autoFocus
+                            />
+                            {pinError && (
+                                <p className="text-red-500 text-sm font-medium">Incorrect PIN. Please try again.</p>
+                            )}
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPinDialog(false);
+                                        setPinInput('');
+                                        setPinError(false);
+                                    }}
+                                    className="flex-1 py-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-4 rounded-xl bg-[#5B4A3E] text-[#F6F2EB] font-medium hover:bg-[#4E3E33] transition-colors"
+                                >
+                                    Verify
+                                </button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };

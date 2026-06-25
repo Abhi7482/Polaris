@@ -7,7 +7,7 @@ const SessionContext = createContext();
 export const SessionProvider = ({ children }) => {
     const [sessionId, setSessionId] = useState(null);
     const [photos, setPhotos] = useState([]);
-    const [options, setOptions] = useState({ filter: 'color', frame: 'default' });
+    const [options, setOptions] = useState({ filter: 'color', frame: 'Classic Black' });
     const [copies, setCopiesState] = useState(() => {
         try {
             return parseInt(sessionStorage.getItem('polaris_copies') || '2', 10);
@@ -49,7 +49,7 @@ export const SessionProvider = ({ children }) => {
             const res = await callApi('/session/start', 'POST');
             setSessionId(res.data.session_id);
             setPhotos([]);
-            setOptions({ filter: 'color', frame: 'default' }); // RESET OPTIONS FOR NEW SESSION
+            setOptions({ filter: 'color', frame: 'Classic Black' }); // RESET OPTIONS FOR NEW SESSION
             // Do NOT reset retakeCount here
             setPaymentFailureCount(0);
             sessionStorage.setItem('polaris_payment_failures', '0');
@@ -64,7 +64,7 @@ export const SessionProvider = ({ children }) => {
         // 1. Reset LOCAL state immediately (Critical for UI consistency)
         setSessionId(null);
         setPhotos([]);
-        setOptions({ filter: 'color', frame: 'default' });
+        setOptions({ filter: 'color', frame: 'Classic Black' });
         setCopies(2);
         setRetakeCount(0);
         setPaymentFailureCount(0);

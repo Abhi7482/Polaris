@@ -64,7 +64,7 @@ const PaymentSuccess = () => {
                         }
 
                         // Forced Reset of Options to ensure UI matches Backend defaults
-                        if (setOptions) setOptions({ filter: 'color', frame: 'default' });
+                        if (setOptions) setOptions({ filter: 'color', frame: 'Classic Black' });
 
                         // Delay for UX then navigate
                         setTimeout(() => navigate('/options'), 2000);

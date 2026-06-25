@@ -88,7 +88,9 @@ async def root():
 async def status():
     return {
         "status": "ok",
+        "status": "ok",
         "camera": camera.is_open,
+        "camera_name": camera.active_camera_name,
         "session": state_manager.get_state()
     }
 

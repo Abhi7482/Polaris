@@ -11,35 +11,25 @@ const specialFramesLookup = {
 // --- HARDCODED SPECIAL EVENT CONFIG ---
 const templates = {
     color: [
-        { id: 'Vintage', name: 'Vintage', desc: 'Special Edition', hex: '#5B4A3E' },
-        { id: 'new year eve special', name: 'NYE Special', desc: 'Special Edition', hex: '#000000' },
-        { id: 'Classic', name: 'Classic', desc: 'Special Edition', hex: '#1a1a1a' },
+        { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
+        { id: 'Polaroid Film Strip', name: 'Polaroid Film Strip', desc: 'Film Strip', hex: '#E8DED4' },
+        { id: 'Classic Retro', name: 'Classic Retro', desc: 'Retro Style', hex: '#D2B48C' },
+        { id: 'Blue Royale', name: 'Blue Retro', desc: 'Royal Tones', hex: '#1E3A8A' },
+        { id: 'Scifi', name: 'Scifi', desc: 'Futuristic', hex: '#00FFFF' },
+        { id: 'Pink Royale', name: 'Pink Royale', desc: 'Royale Pink', hex: '#E63946' },
+        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
     ],
     bw: [
-        { id: 'Vintage', name: 'Vintage', desc: 'Special Edition', hex: '#5B4A3E' },
-        { id: 'new year eve special', name: 'NYE Special', desc: 'Special Edition', hex: '#000000' },
-        { id: 'Classic', name: 'Classic', desc: 'Special Edition', hex: '#1a1a1a' },
+        { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
+        { id: 'Polaroid Film Strip', name: 'Polaroid Film Strip', desc: 'Film Strip', hex: '#E8DED4' },
+        { id: 'Classic Retro', name: 'Classic Retro', desc: 'Retro Style', hex: '#D2B48C' },
+        { id: 'Blue Royale', name: 'Blue Retro', desc: 'Royal Tones', hex: '#1E3A8A' },
+        { id: 'Scifi', name: 'Scifi', desc: 'Futuristic', hex: '#00FFFF' },
+        { id: 'Pink Royale', name: 'Pink Royale', desc: 'Royale Pink', hex: '#E63946' },
+        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
     ]
 };
 
-/* ORIGINAL TEMPLATES (SAVED)
-const templates = {
-    color: [
-        { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
-        { id: 'Polaroid Film Strip', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'Drunken Monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#E63946' },
-        { id: 'After Dark Pop', name: 'After Dark', desc: 'Neon Pop', hex: '#2C2C2C' },
-        { id: 'Blue Royale', name: 'Blue Royale', desc: 'Royal Tones', hex: '#1E3A8A' },
-        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
-        { id: 'Christmas', name: 'Christmas', desc: 'Holiday Special', hex: '#C41E3A' },
-    ],
-    bw: [
-        { id: 'Classic Black', name: 'Classic Black', desc: 'Timeless', hex: '#1a1a1a' },
-        { id: 'Polaroid Film Strip', name: 'Polaroid', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'Drunken Monkey', name: 'Drunken Monkey', desc: 'Party Vibes', hex: '#505050' },
-    ]
-};
-*/
 
 // --- SUB-COMPONENT: SWIPE INDICATOR ---
 const SwipeIndicator = () => (

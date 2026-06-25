@@ -6,7 +6,7 @@ import { useSession } from '../context/SessionContext';
 const PhotoStrip = ({ photos = [] }) => {
     // Get options from context to determine the frame
     const { options, callApi } = useSession();
-    const { filter, frame } = options || { filter: 'color', frame: 'default' };
+    const { filter, frame } = options || { filter: 'color', frame: 'Classic Black' };
 
     // Default slots (Regular) - fallback while loading
     const DEFAULT_SLOTS = [
