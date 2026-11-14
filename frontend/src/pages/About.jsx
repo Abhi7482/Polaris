@@ -57,8 +57,8 @@ const About = () => {
                     <div className="glass p-8 rounded-3xl border border-white/40 text-center shadow-lg">
                         <h2 className="text-2xl font-bold mb-4 text-polaris-primary">Contact Us</h2>
                         <p className="text-polaris-text/80 mb-2">Have questions or want to book Polaris for your event?</p>
-                        <p className="text-xl font-semibold text-polaris-primary">support@polaris.co</p>
-                        <p className="text-xl font-semibold text-polaris-primary mt-2">+91 6361615410</p>
+                        <p className="text-xl font-semibold text-polaris-primary">rakshitapatil0106@gmail.com</p>
+                        <p className="text-xl font-semibold text-polaris-primary mt-2">+91 9611401875</p>
                         <p className="text-polaris-muted mt-4 text-sm">
                             Sanath Apt 402, Shivbasava Nagar, Belgaum, India
                         </p>

@@ -66,11 +66,11 @@ const Policies = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold uppercase text-gray-500">Phone</p>
-                                    <p className="font-medium">+91 6361615410</p>
+                                    <p className="font-medium">+91 9611401875</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold uppercase text-gray-500">Email</p>
-                                    <p className="font-medium">support@polaris.co</p>
+                                    <p className="font-medium">rakshitapatil0106@gmail.com</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold uppercase text-gray-500">Address</p>
@@ -146,7 +146,7 @@ const Policies = () => {
                         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mt-8">
                             <h3 className="text-lg font-bold mb-2">Grievance Officer</h3>
                             <p><strong>Name:</strong> RAKSHITA R PATIL</p>
-                            <p><strong>Email:</strong> support@polaris.co</p>
+                            <p><strong>Email:</strong> rakshitapatil0106@gmail.com</p>
                         </div>
                     </div>
                 </section>

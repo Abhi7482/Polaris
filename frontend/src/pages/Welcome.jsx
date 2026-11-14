@@ -316,6 +316,12 @@ const Welcome = () => {
                         <span>•</span>
                         <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">Help</button>
                     </div>
+
+                    {/* Legal / Contact Info */}
+                    <div className="text-center space-y-0.5 pt-1">
+                        <p className="text-[9px] font-bold tracking-widest uppercase text-polaris-muted/40">RAKSHITA R PATIL</p>
+                        <p className="text-[9px] text-polaris-muted/35 tracking-wide">rakshitapatil0106@gmail.com &nbsp;|&nbsp; +91 9611401875</p>
+                    </div>
                 </motion.div>
 
             </motion.div>
