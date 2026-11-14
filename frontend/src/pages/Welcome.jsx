@@ -275,9 +275,9 @@ const Welcome = () => {
                     initial="hidden"
                     animate="visible"
                     variants={fadeUp}
-                    className="space-y-6 mb-4"
+                    className="space-y-3 mb-2"
                 >
-                    <div className="flex items-center justify-between border-t-2 border-dashed border-polaris-primary/10 pt-6">
+                    <div className="flex items-center justify-between border-t-2 border-dashed border-polaris-primary/10 pt-4">
                         <div className="flex flex-col">
                             <span className="text-xs font-bold text-polaris-muted uppercase tracking-widest">Total Price</span>
                             <span className="text-xs text-polaris-muted/60">Inclusive of all taxes</span>
@@ -310,17 +310,17 @@ const Welcome = () => {
                         </div>
                     </button>
 
-                    {/* Footer Links */}
-                    <div className="flex justify-center gap-6 text-[10px] uppercase tracking-widest font-bold text-polaris-muted/50">
-                        <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors">Policies</button>
-                        <span>•</span>
-                        <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">Help</button>
-                    </div>
-
-                    {/* Legal / Contact Info */}
-                    <div className="text-center space-y-0.5 pt-1">
-                        <p className="text-[9px] font-bold tracking-widest uppercase text-polaris-muted/40">RAKSHITA R PATIL</p>
-                        <p className="text-[9px] text-polaris-muted/35 tracking-wide">rakshitapatil0106@gmail.com &nbsp;|&nbsp; +91 9611401875</p>
+                    {/* Legal / Contact Info + Footer Links combined */}
+                    <div className="border-t border-polaris-primary/10 pt-3 space-y-1">
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-widest uppercase text-polaris-muted">RAKSHITA R PATIL</p>
+                            <p className="text-[10px] text-polaris-muted/80 tracking-wide mt-0.5">rakshitapatil0106@gmail.com &nbsp;|&nbsp; +91 9611401875</p>
+                        </div>
+                        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-widest font-bold text-polaris-muted/50 pt-1">
+                            <button onClick={() => navigate('/policies')} className="hover:text-polaris-primary transition-colors">Policies</button>
+                            <span>•</span>
+                            <button onClick={() => navigate('/about')} className="hover:text-polaris-primary transition-colors">Help</button>
+                        </div>
                     </div>
                 </motion.div>
 
