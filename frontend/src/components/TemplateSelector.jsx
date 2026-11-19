@@ -1,32 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 
-// --- DEFINE SPECIAL FRAMES METADATA ---
-const specialFramesLookup = {
-    'Pink Royale Inso': { id: 'Pink Royale Inso', name: 'Pink Royale', desc: 'Special Edition', hex: '#E63946' },
-    'Classic Insomania': { id: 'Classic Insomania', name: 'Classic Inso', desc: 'Special Edition', hex: '#1a1a1a' },
-    'Vintage Insomania': { id: 'Vintage Insomania', name: 'Vintage Inso', desc: 'Special Edition', hex: '#5B4A3E' },
-};
-
-// --- HARDCODED SPECIAL EVENT CONFIG ---
+// --- HARDCODED FRAME CONFIG ---
 const templates = {
     color: [
+        { id: 'Doodle Black', name: 'Doodle Black', desc: 'Gold Doodles', hex: '#1a1a1a' },
+        { id: 'Doodle Pink', name: 'Doodle Pink', desc: 'Pink Vibes', hex: '#C2185B' },
         { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
-        { id: 'Polaroid Film Strip', name: 'Polaroid Film Strip', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'Classic Retro', name: 'Classic Retro', desc: 'Retro Style', hex: '#D2B48C' },
-        { id: 'Blue Royale', name: 'Blue Retro', desc: 'Royal Tones', hex: '#1E3A8A' },
-        { id: 'Scifi', name: 'Scifi', desc: 'Futuristic', hex: '#00FFFF' },
-        { id: 'Pink Royale', name: 'Pink Royale', desc: 'Royale Pink', hex: '#E63946' },
-        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
+        { id: 'Doodle Teal', name: 'Doodle Teal', desc: 'Teal Coral', hex: '#00695C' },
+        { id: 'Doodle Blue', name: 'Doodle Blue', desc: 'Royal Blue', hex: '#1565C0' },
+        { id: 'Film Strip', name: 'Film Strip', desc: 'Kodak Vibes', hex: '#3E2723' },
+        { id: 'Christmas', name: 'Christmas', desc: 'Holiday Special', hex: '#B71C1C' },
     ],
     bw: [
+        { id: 'Doodle Black', name: 'Doodle Black', desc: 'Gold Doodles', hex: '#1a1a1a' },
+        { id: 'Doodle Pink', name: 'Doodle Pink', desc: 'Pink Vibes', hex: '#C2185B' },
         { id: 'Classic Black', name: 'Classic Black', desc: 'Minimal Dark', hex: '#1a1a1a' },
-        { id: 'Polaroid Film Strip', name: 'Polaroid Film Strip', desc: 'Film Strip', hex: '#E8DED4' },
-        { id: 'Classic Retro', name: 'Classic Retro', desc: 'Retro Style', hex: '#D2B48C' },
-        { id: 'Blue Royale', name: 'Blue Retro', desc: 'Royal Tones', hex: '#1E3A8A' },
-        { id: 'Scifi', name: 'Scifi', desc: 'Futuristic', hex: '#00FFFF' },
-        { id: 'Pink Royale', name: 'Pink Royale', desc: 'Royale Pink', hex: '#E63946' },
-        { id: 'Retro Bloom', name: 'Retro Bloom', desc: 'Floral', hex: '#F472B6' },
+        { id: 'Doodle Teal', name: 'Doodle Teal', desc: 'Teal Coral', hex: '#00695C' },
+        { id: 'Doodle Blue', name: 'Doodle Blue', desc: 'Royal Blue', hex: '#1565C0' },
+        { id: 'Film Strip', name: 'Film Strip', desc: 'Kodak Vibes', hex: '#3E2723' },
+        { id: 'Christmas', name: 'Christmas', desc: 'Holiday Special', hex: '#B71C1C' },
     ]
 };
 

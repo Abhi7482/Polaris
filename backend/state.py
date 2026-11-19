@@ -6,7 +6,7 @@ class SessionState(BaseModel):
     session_id: str
     photos: List[str] = Field(default_factory=list)
     selected_filter: str = "color" # color, bw
-    selected_frame: str = "Classic Black"
+    selected_frame: str = "Doodle Black"
     is_printing: bool = False
     is_complete: bool = False
 
