@@ -16,7 +16,7 @@ const PaymentSuccess = () => {
     useEffect(() => {
         let isMounted = true;
         let attempts = 0;
-        const maxAttempts = 30; // 30 * 2s = 60 seconds timeout
+        const maxAttempts = 90; // 90 * 2s = 180 seconds (3 min) timeout
 
         const handleFailure = () => {
             if (incrementPaymentFailure && !hasIncrementedRef.current) {
@@ -64,7 +64,7 @@ const PaymentSuccess = () => {
                         }
 
                         // Forced Reset of Options to ensure UI matches Backend defaults
-                        if (setOptions) setOptions({ filter: 'color', frame: 'Classic Black' });
+                        if (setOptions) setOptions({ filter: 'color', frame: 'Doodle Black' });
 
                         // Delay for UX then navigate
                         setTimeout(() => navigate('/options'), 2000);
