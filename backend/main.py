@@ -158,7 +158,7 @@ async def get_frame_layout(filter_type: str = "color", frame_id: str = "regular"
     try:
         # Construct path to check asset
         # Use absolute path relative to this file (backend/)
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        BASE_DIR = processor.base_dir
         
         template_filename = f"{frame_id}.png"
         template_path = os.path.join(BASE_DIR, "assets", "frames", filter_type, template_filename)
@@ -281,10 +281,23 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     filename_4x6 = f"{session.session_id}_print_4x6.png"
     print_path_4x6_abs = os.path.join(PRINTS_DIR, filename_4x6)
     
-    # Check if source exists
+    # Check if source exists; if not, auto-generate it from session photos
     if not os.path.exists(print_path_abs):
-        logger.error(f"Source strip not found: {print_path_abs}")
-        raise HTTPException(status_code=400, detail="Photo strip not generated yet")
+        logger.warning(f"Source strip not found at {print_path_abs}, auto-generating before print...")
+        if len(session.photos) >= 4:
+            input_paths_abs = [os.path.join(CAPTURES_DIR, os.path.basename(p)) for p in session.photos]
+            gen_res = processor.create_strip(
+                input_paths_abs,
+                output_path=print_path_abs,
+                filter_type=session.selected_filter,
+                frame_id=session.selected_frame
+            )
+            if not gen_res or not os.path.exists(print_path_abs):
+                logger.error(f"Failed to auto-generate strip at {print_path_abs}")
+                raise HTTPException(status_code=400, detail="Photo strip generation failed")
+        else:
+            logger.error(f"Source strip not found and session has only {len(session.photos)} photos")
+            raise HTTPException(status_code=400, detail="Photo strip not generated yet")
 
     # Sync Generation
     final_output_path = processor.create_4x6_layout(print_path_abs, print_path_4x6_abs)

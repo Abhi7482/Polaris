@@ -15,7 +15,7 @@ const Capture = () => {
     const [shotCount, setShotCount] = useState(0);
 
     // Frame Overlay Logic
-    const { filter, frame } = options || { filter: 'color', frame: 'Classic Black' };
+    const { filter, frame } = options || { filter: 'color', frame: 'Doodle Black' };
     const frameUrl = (frame && frame !== 'default') ? `/frames/${filter}/${frame}.png` : null;
 
     useEffect(() => {

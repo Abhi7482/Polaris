@@ -1,6 +1,7 @@
 from PIL import Image, ImageOps, ImageFilter
 import logging
 import os
+import sys
 import cv2
 import numpy as np
 
@@ -10,8 +11,15 @@ class ImageProcessor:
     def __init__(self):
         self.strip_width = 1875
         self.strip_height = 5625
-        # Define base directory relative to this file (backend/)
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        # Robust base_dir resolution (supports source, PyInstaller onefile, and unpacked assets)
+        if getattr(sys, 'frozen', False):
+            exe_dir = os.path.dirname(sys.executable)
+            if os.path.exists(os.path.join(exe_dir, "assets")):
+                self.base_dir = exe_dir
+            else:
+                self.base_dir = getattr(sys, '_MEIPASS', exe_dir)
+        else:
+            self.base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Fallback coordinates for known types
         self.legacy_coordinates = {

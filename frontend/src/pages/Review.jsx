@@ -11,29 +11,39 @@ const Review = () => {
     const navigate = useNavigate();
     const { photos, startSession, copies, callApi, retakeCount, incrementRetake } = useSession();
     const [isPrinting, setIsPrinting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(true);
     const [processedPath, setProcessedPath] = useState(null);
+    const [errorMsg, setErrorMsg] = useState(null);
 
     // --- Backend Processing (Preserved) ---
     useEffect(() => {
+        let isMounted = true;
         const processStrip = async () => {
+            setIsProcessing(true);
             try {
                 const res = await callApi('/process', 'POST');
-                setProcessedPath(res.data.path);
+                if (isMounted) setProcessedPath(res.data.path);
             } catch (err) {
                 console.error("Processing failed", err);
+            } finally {
+                if (isMounted) setIsProcessing(false);
             }
         };
         processStrip();
+        return () => { isMounted = false; };
     }, []);
 
     const handlePrint = async () => {
-        if (isPrinting) return;
+        if (isPrinting || isProcessing) return;
         setIsPrinting(true);
+        setErrorMsg(null);
         try {
             await callApi('/print', 'POST', { copies });
             navigate('/printing');
         } catch (err) {
             console.error("Print failed", err);
+            const msg = err?.response?.data?.detail || err?.message || "Failed to print photos. Please check printer connection.";
+            setErrorMsg(msg);
             setIsPrinting(false);
         }
     };
@@ -122,12 +132,18 @@ const Review = () => {
 
                 {/* 2. Primary Actions */}
                 <div className="flex flex-col gap-5 mb-8">
+                    {/* Error Banner */}
+                    {errorMsg && (
+                        <div className="p-4 bg-red-50 border border-red-300 rounded-2xl text-red-700 text-sm font-semibold text-center shadow-sm">
+                            {errorMsg}
+                        </div>
+                    )}
 
                     {/* PRINT BUTTON (Primary) */}
                     <button
                         onClick={handlePrint}
-                        disabled={isPrinting}
-                        className="group relative w-full bg-polaris-primary text-white h-28 rounded-2xl overflow-hidden shadow-2xl shadow-polaris-primary/20 transition-all active:scale-[0.98] hover:shadow-polaris-primary/40"
+                        disabled={isPrinting || isProcessing}
+                        className="group relative w-full bg-polaris-primary text-white h-28 rounded-2xl overflow-hidden shadow-2xl shadow-polaris-primary/20 transition-all active:scale-[0.98] hover:shadow-polaris-primary/40 disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                         <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
 
@@ -139,13 +155,13 @@ const Review = () => {
                                 <div className="text-left flex flex-col">
                                     <span className="text-2xl font-black uppercase tracking-tight leading-none">Print Photos</span>
                                     <span className="text-sm text-white/60 font-medium mt-1">
-                                        {isPrinting ? "Sending to printer..." : "Confirm & Finish"}
+                                        {isProcessing ? "Preparing photos..." : isPrinting ? "Sending to printer..." : "Confirm & Finish"}
                                     </span>
                                 </div>
                             </div>
 
-                            {!isPrinting && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
-                            {isPrinting && <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                            {!isPrinting && !isProcessing && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
+                            {(isPrinting || isProcessing) && <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                         </div>
                     </button>
 
