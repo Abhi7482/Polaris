@@ -511,30 +511,37 @@ KIOSK_ID = os.getenv("KIOSK_ID", "polaris-001")
 
 def _execute_remote_restart():
     """
-    Spawn a detached PowerShell process that force-kills Polaris.exe and
-    polaris-backend.exe (releasing USB camera & port 8000), waits 2s,
+    Spawn a completely detached cmd.exe batch script that force-kills Polaris.exe
+    and polaris-backend.exe (releasing USB camera & port 8000), waits 2s,
     and relaunches Polaris.exe.
     """
     try:
-        # In PyInstaller bundle: <app_dir>/resources/backend/polaris-backend.exe
-        # Polaris.exe is two levels up from backend dir: <app_dir>/Polaris.exe
+        import tempfile
         if getattr(sys, "frozen", False):
             backend_dir = os.path.dirname(sys.executable)
             app_exe = os.path.abspath(os.path.join(backend_dir, "..", "..", "Polaris.exe"))
         else:
-            # Dev fallback
             app_exe = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "launch_kiosk.bat"))
 
-        ps_cmd = (
-            "Start-Sleep -Seconds 1; "
-            "Stop-Process -Name 'Polaris' -Force -ErrorAction SilentlyContinue; "
-            "Stop-Process -Name 'polaris-backend' -Force -ErrorAction SilentlyContinue; "
-            "Start-Sleep -Seconds 2; "
-            f"if (Test-Path '{app_exe}') {{ Start-Process -FilePath '{app_exe}' }}"
+        bat_path = os.path.join(tempfile.gettempdir(), "polaris_remote_restart.bat")
+        bat_content = (
+            "@echo off\r\n"
+            "timeout /t 1 /nobreak >nul\r\n"
+            "taskkill /F /IM Polaris.exe >nul 2>&1\r\n"
+            "taskkill /F /IM polaris-backend.exe >nul 2>&1\r\n"
+            "timeout /t 2 /nobreak >nul\r\n"
+            f'if exist "{app_exe}" start "" "{app_exe}"\r\n'
         )
-        creation_flags = getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
+        with open(bat_path, "w", encoding="utf-8") as f:
+            f.write(bat_content)
+
+        # DETACHED_PROCESS (0x8) | CREATE_NEW_PROCESS_GROUP (0x200) | CREATE_NO_WINDOW (0x08000000)
+        creation_flags = 0x00000008 | 0x00000200 | 0x08000000
         subprocess.Popen(
-            ["powershell", "-WindowStyle", "Hidden", "-Command", ps_cmd],
+            ["cmd.exe", "/c", bat_path],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             creationflags=creation_flags,
             close_fds=True,
         )
