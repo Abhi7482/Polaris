@@ -106,7 +106,10 @@ async def status():
 _startup_time = time.time()
 
 def _check_printer(name_key: str) -> dict:
-    """Check if a printer matching name_key exists in Windows printer queue."""
+    """Check if a printer matching name_key is installed AND actually online/ready."""
+    PRINTER_ATTRIBUTE_WORK_OFFLINE = 0x0400
+    # Error (2), Paper Jam (8), Paper Out (16), Offline (128), Not Available (4096), User Intervention (1048576)
+    OFFLINE_OR_ERROR_STATUS = 0x00000002 | 0x00000008 | 0x00000010 | 0x00000080 | 0x00001000 | 0x00100000
     try:
         installed = [p[2] for p in win32print.EnumPrinters(
             win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
@@ -118,11 +121,26 @@ def _check_printer(name_key: str) -> dict:
                     continue
                 if not is_bw and "bw" in p.lower():
                     continue
-                return {"found": True, "name": p}
-        return {"found": False, "name": None}
+                # Verify printer is actually online (not unplugged / WorkOffline / Error)
+                try:
+                    h = win32print.OpenPrinter(p)
+                    try:
+                        info = win32print.GetPrinter(h, 2)
+                        status_flags = info.get("Status", 0)
+                        attrs = info.get("Attributes", 0)
+                    finally:
+                        win32print.ClosePrinter(h)
+                    is_offline = bool(attrs & PRINTER_ATTRIBUTE_WORK_OFFLINE) or bool(status_flags & OFFLINE_OR_ERROR_STATUS)
+                    if is_offline:
+                        return {"found": False, "installed": True, "online": False, "name": p, "status_code": status_flags}
+                    return {"found": True, "installed": True, "online": True, "name": p, "status_code": status_flags}
+                except Exception as inner_e:
+                    logger.warning(f"Could not query status for printer {p}: {inner_e}")
+                    return {"found": False, "installed": True, "online": False, "name": p, "error": str(inner_e)}
+        return {"found": False, "installed": False, "online": False, "name": None}
     except Exception as e:
         logger.error(f"Printer check error: {e}")
-        return {"found": False, "name": None, "error": str(e)}
+        return {"found": False, "installed": False, "online": False, "name": None, "error": str(e)}
 
 @app.get("/health")
 async def health_check():
