@@ -1,6 +1,25 @@
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+# ── Python 3.13 compatibility shim ───────────────────────────────────────────
+# APScheduler 3.10.1 (a PhonePe SDK dependency) calls:
+#   from pkg_resources import get_distribution, DistributionNotFound
+# pkg_resources was removed from Python 3.13 stdlib. This shim re-adds it
+# via importlib.metadata before APScheduler (or PhonePe SDK) is imported.
+import sys as _sys
+try:
+    import pkg_resources as _pr  # noqa: F401 — just check it's importable
+except ImportError:
+    import types as _types
+    import importlib.metadata as _meta
+    _pkg = _types.ModuleType("pkg_resources")
+    _pkg.DistributionNotFound = _meta.PackageNotFoundError
+    _pkg.get_distribution = _meta.distribution
+    _pkg.require = lambda *a, **kw: None
+    _pkg.working_set = type("WorkingSet", (), {"require": lambda *a, **kw: None})()
+    _sys.modules["pkg_resources"] = _pkg
+# ─────────────────────────────────────────────────────────────────────────────
+
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import uuid
 import logging
 import time
@@ -43,6 +62,9 @@ SHOULD_PUBLISH_EVENTS = False
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://polaris7482.netlify.app")
 
+# Dashboard secret key — set via Render env vars, never hardcode in production
+DASHBOARD_SECRET = os.getenv("DASHBOARD_SECRET", "polaris-dashboard-2026")
+
 # Initialize SDK Client
 try:
     phonepe_client = StandardCheckoutClient.get_instance(
@@ -59,7 +81,9 @@ except Exception as e:
 
 # --- In-Memory Storage ---
 orders_db: Dict[str, Dict[str, Any]] = {}
-kiosk_status_db: Dict[str, Any] = {}
+
+# Kiosk registry — keyed by kiosk_id, stores latest heartbeat payload
+kiosk_registry: Dict[str, Dict[str, Any]] = {}
 
 # --- Models ---
 class CreateOrderRequest(BaseModel):
@@ -68,15 +92,25 @@ class CreateOrderRequest(BaseModel):
 
 class HeartbeatRequest(BaseModel):
     kiosk_id: str
-    timestamp: str
+    timestamp: float
     version: str
-    status: Dict[str, str]
+    status: Dict[str, Any]
 
 # --- Endpoints ---
 
 @app.get("/")
 def read_root():
     return {"message": "Polaris Hosted Backend (SDK) Running"}
+
+@app.get("/health")
+def health():
+    """Health check endpoint used by kiosk boot screen to verify cloud is reachable."""
+    return {
+        "status": "ok",
+        "env": ENV_MODE,
+        "phonepe_sdk_initialized": phonepe_client is not None,
+        "client_id": CLIENT_ID,
+    }
 
 @app.get("/debug-config")
 def debug_config():
@@ -162,23 +196,6 @@ async def phonepe_webhook(request: Request):
     if not phonepe_client:
         return {"status": "error", "message": "SDK not active"}
 
-    # Get Headers and Body
-    x_verify = request.headers.get("X-VERIFY", "")
-    # Note: SDK might expect 'Authorization' header depending on callback type, 
-    # but Standard Checkout usually sends X-VERIFY. 
-    # The docs for 'validate_callback' mention 'authorization' arg.
-    
-    # For Standard Checkout callbacks, use validate_callback logic
-    # But SDK docs say: validate_callback(username, password, callback_header_data...)
-    # This implies S2S callback configuration in dashboard. 
-    # If using X-VERIFY standard flow, SDK might handle it differently or we use verify_checksum manually.
-    # However, let's try to follow SDK pattern if possible, or fallback to manual verify if SDK strictly requires username/password (which are S2S credentials).
-    
-    # Assuming standard webhook for now: The SDK 'validate_callback' seems to be for S2S callbacks with Basic Auth.
-    # Standard Checkout webhooks usually just sign with Salt.
-    # Let's trust the Active Status Check (in /order_status) as the primary source of truth for Kiosk 
-    # and just accept the webhook to trigger a DB update if possible.
-    
     try:
         body_bytes = await request.body()
         body_str = body_bytes.decode('utf-8')
@@ -205,14 +222,68 @@ async def phonepe_webhook(request: Request):
 
     return {"status": "ok"}
 
+# ─────────────────────────────────────────────────────────────────────────────
+# HEARTBEAT — receives status from local kiosk every 30 seconds
+# ─────────────────────────────────────────────────────────────────────────────
 @app.post("/heartbeat")
 def heartbeat(request: HeartbeatRequest):
-    kiosk_status_db[request.kiosk_id] = {
+    """Receive and store heartbeat from the kiosk machine."""
+    kiosk_registry[request.kiosk_id] = {
+        "kiosk_id": request.kiosk_id,
         "timestamp": request.timestamp,
+        "version": request.version,
         "status": request.status,
-        "last_seen": time.time()
+        "last_seen": time.time(),
     }
-    return {"status": "received"}
+    logger.info(f"Heartbeat from {request.kiosk_id}: cam={request.status.get('camera')} | printer_color={request.status.get('printer_color')} | session={request.status.get('session_step')}")
+    return {"status": "received", "kiosk_id": request.kiosk_id}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DASHBOARD — remote monitoring endpoints (protected by DASHBOARD_SECRET)
+# ─────────────────────────────────────────────────────────────────────────────
+def _require_auth(key: Optional[str]):
+    if not key or key != DASHBOARD_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid dashboard key")
+
+@app.get("/dashboard/status")
+def dashboard_status(x_dashboard_key: Optional[str] = Header(default=None)):
+    """
+    Returns the latest health status of all registered kiosks.
+    Use this from your phone to see real-time kiosk health.
+    
+    Header: X-Dashboard-Key: <your DASHBOARD_SECRET>
+    """
+    _require_auth(x_dashboard_key)
+
+    now = time.time()
+    result = {}
+    for kiosk_id, data in kiosk_registry.items():
+        seconds_ago = round(now - data["last_seen"])
+        online_status = (
+            "online" if seconds_ago < 60
+            else "slow" if seconds_ago < 120
+            else "offline"
+        )
+        result[kiosk_id] = {
+            **data,
+            "seconds_ago": seconds_ago,
+            "online_status": online_status,
+        }
+
+    # Also include today's payment summary
+    today_start = time.time() - (time.time() % 86400)
+    today_orders = [o for o in orders_db.values() if o.get("created_at", 0) > today_start]
+    successful = [o for o in today_orders if o["status"] == "SUCCESS"]
+    total_revenue_paise = sum(o["amount"] for o in successful)
+
+    return {
+        "kiosks": result,
+        "summary": {
+            "orders_today": len(today_orders),
+            "successful_payments_today": len(successful),
+            "revenue_today_inr": total_revenue_paise / 100,
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
