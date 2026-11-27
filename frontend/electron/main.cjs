@@ -97,6 +97,21 @@ const createWindow = () => {
         },
     });
 
+    // Ensure the kiosk window comes straight to the foreground even after a background/remote restart
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+        if (!isDev) {
+            mainWindow.setAlwaysOnTop(true, 'screen-saver');
+            mainWindow.focus();
+            app.focus({ steal: true });
+            setTimeout(() => {
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.setAlwaysOnTop(false);
+                }
+            }, 1500);
+        }
+    });
+
     // Load the app — always open the boot screen first (/boot)
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173/boot');
