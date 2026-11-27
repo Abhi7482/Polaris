@@ -87,6 +87,7 @@ orders_db:      Dict[str, Dict[str, Any]] = {}
 kiosk_registry: Dict[str, Dict[str, Any]] = {}
 prints_store:   List[Dict[str, Any]]      = []   # last 50 print thumbnails
 alert_state:    Dict[str, Dict[str, Any]] = {}   # tracks last alerted state per kiosk
+command_queue:  Dict[str, List[Dict[str, Any]]] = {}  # pending remote commands per kiosk
 
 # ── Models ────────────────────────────────────────────────────────────────────
 class CreateOrderRequest(BaseModel):
@@ -104,6 +105,10 @@ class PrintUploadRequest(BaseModel):
     thumbnail_b64: str   # base64-encoded JPEG thumbnail
     timestamp: float
     session_id: str
+
+class KioskCommandRequest(BaseModel):
+    kiosk_id: str = "polaris-001"
+    command: str  # e.g. "restart_app"
 
 # ── Telegram Helpers ──────────────────────────────────────────────────────────
 async def send_telegram(message: str):
@@ -301,8 +306,9 @@ def heartbeat(request: HeartbeatRequest):
         "status": request.status,
         "last_seen": time.time(),
     }
+    pending = command_queue.pop(request.kiosk_id, [])
     logger.info(f"Heartbeat ← {request.kiosk_id} | cam={request.status.get('camera')} | session={request.status.get('session_step')}")
-    return {"status": "received"}
+    return {"status": "received", "commands": pending}
 
 # ── PRINT UPLOAD ──────────────────────────────────────────────────────────────
 @app.post("/upload_print")
@@ -362,6 +368,18 @@ def dashboard_status(key: Optional[str] = None):
 def dashboard_prints(key: Optional[str] = None):
     _auth(key)
     return {"prints": prints_store, "total": len(prints_store)}
+
+@app.post("/dashboard/command")
+def dashboard_command(req: KioskCommandRequest, key: Optional[str] = None):
+    _auth(key)
+    if req.command not in ("restart_app",):
+        raise HTTPException(status_code=400, detail="Unsupported command")
+    command_queue.setdefault(req.kiosk_id, []).append({
+        "command": req.command,
+        "queued_at": time.time(),
+    })
+    logger.info(f"Queued remote command '{req.command}' for {req.kiosk_id}")
+    return {"status": "queued", "kiosk_id": req.kiosk_id, "command": req.command}
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -35,6 +35,15 @@ const startBackend = () => {
     if (!fs.existsSync(backendPath)) {
         console.error('Backend executable not found at:', backendPath);
         return;
+    }
+
+    // Kill any stale/orphaned polaris-backend.exe holding the camera or port 8000
+    if (process.platform === 'win32') {
+        try {
+            execSync('taskkill /F /IM polaris-backend.exe', { stdio: 'ignore' });
+        } catch (_) {
+            // No stale process running
+        }
     }
 
     console.log('Starting backend from:', backendPath);
@@ -132,6 +141,11 @@ app.on('will-quit', () => {
     if (backendProcess) {
         console.log('Killing backend process...');
         backendProcess.kill();
+    }
+    if (!isDev && process.platform === 'win32') {
+        try {
+            execSync('taskkill /F /IM polaris-backend.exe', { stdio: 'ignore' });
+        } catch (_) {}
     }
 });
 

@@ -14,6 +14,8 @@ import requests
 import win32print
 import base64
 import io
+import sys
+import subprocess
 from camera import CameraService
 from printer import PrinterService
 from processor import ImageProcessor
@@ -507,6 +509,40 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
 HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com"
 KIOSK_ID = os.getenv("KIOSK_ID", "polaris-001")
 
+def _execute_remote_restart():
+    """
+    Spawn a detached PowerShell process that force-kills Polaris.exe and
+    polaris-backend.exe (releasing USB camera & port 8000), waits 2s,
+    and relaunches Polaris.exe.
+    """
+    try:
+        # In PyInstaller bundle: <app_dir>/resources/backend/polaris-backend.exe
+        # Polaris.exe is two levels up from backend dir: <app_dir>/Polaris.exe
+        if getattr(sys, "frozen", False):
+            backend_dir = os.path.dirname(sys.executable)
+            app_exe = os.path.abspath(os.path.join(backend_dir, "..", "..", "Polaris.exe"))
+        else:
+            # Dev fallback
+            app_exe = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "launch_kiosk.bat"))
+
+        ps_cmd = (
+            "Start-Sleep -Seconds 1; "
+            "Stop-Process -Name 'Polaris' -Force -ErrorAction SilentlyContinue; "
+            "Stop-Process -Name 'polaris-backend' -Force -ErrorAction SilentlyContinue; "
+            "Start-Sleep -Seconds 2; "
+            f"if (Test-Path '{app_exe}') {{ Start-Process -FilePath '{app_exe}' }}"
+        )
+        creation_flags = getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
+        subprocess.Popen(
+            ["powershell", "-WindowStyle", "Hidden", "-Command", ps_cmd],
+            creationflags=creation_flags,
+            close_fds=True,
+        )
+        logger.warning(f"Remote restart triggered — relaunching: {app_exe}")
+    except Exception as e:
+        logger.error(f"Remote restart failed: {e}")
+
+
 async def heartbeat_loop():
     """
     Runs every 30 seconds in the background.
@@ -581,12 +617,19 @@ async def heartbeat_loop():
             }
 
             # Send to hosted backend
-            requests.post(
+            hb_resp = requests.post(
                 f"{HOSTED_BACKEND_URL}/heartbeat",
                 json=payload,
                 timeout=8
             )
             logger.info(f"Heartbeat sent: cam={payload['status']['camera']} | printer_color={payload['status']['printer_color']} | session={session_step} | prints_today={prints_today}")
+
+            # Check for remote commands (e.g. restart_app)
+            if hb_resp.ok:
+                for cmd_obj in hb_resp.json().get("commands", []):
+                    if cmd_obj.get("command") == "restart_app":
+                        _execute_remote_restart()
+                        break
 
         except requests.exceptions.RequestException as e:
             logger.warning(f"Heartbeat network error (kiosk still running): {e}")

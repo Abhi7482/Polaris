@@ -5,7 +5,7 @@ import {
     Camera, Printer, CreditCard, Wifi, HardDrive,
     CheckCircle2, XCircle, AlertTriangle, Loader2,
     RefreshCw, LogOut, Image, TrendingUp, Clock,
-    Bell, Activity, Eye, EyeOff
+    Bell, Activity, Eye, EyeOff, RotateCcw
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -189,6 +189,27 @@ const Dashboard = () => {
         clearInterval(intervalRef.current);
     };
 
+    const [restartConfirm, setRestartConfirm] = useState(false);
+    const [restarting, setRestarting] = useState(false);
+    const [restartMsg, setRestartMsg] = useState(null);
+
+    const handleRestartKiosk = async (kioskId) => {
+        setRestarting(true);
+        setRestartMsg(null);
+        try {
+            await axios.post(`${HOSTED_API_URL}/dashboard/command?key=${encodeURIComponent(key)}`, {
+                kiosk_id: kioskId,
+                command: 'restart_app',
+            });
+            setRestartMsg('Restart queued — kiosk will kill backend & reboot within ~30s.');
+            setRestartConfirm(false);
+        } catch {
+            setRestartMsg('Failed to queue restart command.');
+        } finally {
+            setRestarting(false);
+        }
+    };
+
     // ── LOCK SCREEN ───────────────────────────
     if (!key || keyError) {
         return (
@@ -332,6 +353,38 @@ const Dashboard = () => {
                             <span>·</span>
                             <span>{new Date(kiosk.timestamp * 1000).toLocaleTimeString('en-IN')}</span>
                         </div>
+
+                        {/* Remote App + Backend Restart */}
+                        <div className="pt-2 border-t border-white/8 space-y-2">
+                            {!restartConfirm ? (
+                                <button
+                                    onClick={() => setRestartConfirm(true)}
+                                    className="w-full py-2.5 px-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-amber-500/20 transition-colors"
+                                >
+                                    <RotateCcw size={13} />
+                                    Restart Kiosk App & Backend
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleRestartKiosk(kiosk.kiosk_id)}
+                                        disabled={restarting}
+                                        className="flex-1 py-2.5 px-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold uppercase tracking-wider hover:bg-red-500/30 transition-colors"
+                                    >
+                                        {restarting ? 'Sending...' : 'Confirm Restart'}
+                                    </button>
+                                    <button
+                                        onClick={() => setRestartConfirm(false)}
+                                        className="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 text-white/50 text-xs font-bold uppercase tracking-wider hover:bg-white/10"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                            {restartMsg && (
+                                <p className="text-[11px] text-amber-300/80 text-center">{restartMsg}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* ── HARDWARE STATUS ── */}
@@ -441,3 +494,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
