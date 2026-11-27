@@ -5,4 +5,5 @@ uvicorn
 pydantic
 python-multipart
 requests
+httpx
 phonepe_sdk

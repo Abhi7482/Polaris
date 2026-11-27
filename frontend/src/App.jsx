@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SessionProvider } from './context/SessionContext';
+import SystemBoot from './pages/SystemBoot';
+import Dashboard from './pages/Dashboard';
 import Welcome from './pages/Welcome';
 import PaymentReminder from './pages/PaymentReminder';
 import Options from './pages/Options';
@@ -18,6 +20,13 @@ function App() {
         <SessionProvider>
             <Router>
                 <Routes>
+                    {/* Boot screen — first thing shown when app starts */}
+                    <Route path="/boot" element={<SystemBoot />} />
+
+                    {/* Remote monitoring dashboard */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+
+                    {/* Main kiosk flow */}
                     <Route path="/" element={<Welcome />} />
                     <Route path="/checkout" element={<Payment />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
