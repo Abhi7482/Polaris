@@ -7,6 +7,13 @@ import cv2
 import os
 import logging
 import time
+import shutil
+import platform
+import asyncio
+import requests
+import win32print
+import base64
+import io
 from camera import CameraService
 from printer import PrinterService
 from processor import ImageProcessor
@@ -88,11 +95,132 @@ async def root():
 async def status():
     return {
         "status": "ok",
-        "status": "ok",
         "camera": camera.is_open,
         "camera_name": camera.active_camera_name,
         "session": state_manager.get_state()
     }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEALTH CHECK ENDPOINT — full system diagnostic for boot screen & heartbeat
+# ─────────────────────────────────────────────────────────────────────────────
+_startup_time = time.time()
+
+def _check_printer(name_key: str) -> dict:
+    """Check if a printer matching name_key exists in Windows printer queue."""
+    try:
+        installed = [p[2] for p in win32print.EnumPrinters(
+            win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
+        )]
+        is_bw = "bw" in name_key.lower()
+        for p in installed:
+            if name_key.lower() in p.lower():
+                if is_bw and "bw" not in p.lower():
+                    continue
+                if not is_bw and "bw" in p.lower():
+                    continue
+                return {"found": True, "name": p}
+        return {"found": False, "name": None}
+    except Exception as e:
+        logger.error(f"Printer check error: {e}")
+        return {"found": False, "name": None, "error": str(e)}
+
+@app.get("/health")
+async def health_check():
+    """
+    Full system health check used by the kiosk boot screen and heartbeat.
+    Returns camera, printers, disk, session state, uptime.
+    """
+    uptime = time.time() - _startup_time
+
+    # Camera
+    cam_mode = "stock_photo_fallback" if camera.use_mock else "live"
+    cam_info = {
+        "connected": camera.is_open,
+        "name": camera.active_camera_name,
+        "mode": cam_mode,
+    }
+
+    # Printers
+    printer_color = _check_printer("EPSON L3210 Series")
+    printer_bw = _check_printer("EPSON L3210 BW")
+
+    # Disk
+    disk = shutil.disk_usage('.')
+    disk_free_gb = round(disk.free / (1024 ** 3), 1)
+
+    # Session
+    session = state_manager.get_state()
+    session_step = "idle"
+    if session:
+        if len(session.photos) == 0:
+            session_step = "options"
+        elif len(session.photos) < 4:
+            session_step = f"capture_{len(session.photos)}_of_4"
+        elif session.is_printing:
+            session_step = "printing"
+        else:
+            session_step = "review"
+
+    return {
+        "status": "ok",
+        "version": "1.0.0",
+        "platform": platform.system(),
+        "uptime_seconds": uptime,
+        "camera": cam_info,
+        "printers": {
+            "color": printer_color,
+            "bw": printer_bw,
+        },
+        "disk_free_gb": disk_free_gb,
+        "session_active": session is not None,
+        "session_step": session_step,
+    }
+
+@app.get("/health/print-pipeline")
+async def health_print_pipeline():
+    """
+    Checks that frame assets exist and disk space is sufficient.
+    Used by the boot screen to verify the print pipeline end-to-end.
+    """
+    try:
+        base_dir = processor.base_dir
+        frames_dir_color = os.path.join(base_dir, "assets", "frames", "color")
+        frames_dir_bw = os.path.join(base_dir, "assets", "frames", "bw")
+        overlays_dir = os.path.join(base_dir, "assets", "overlays")
+
+        asset_count = 0
+        missing = []
+
+        for d in [frames_dir_color, frames_dir_bw]:
+            if os.path.exists(d):
+                asset_count += len([f for f in os.listdir(d) if f.endswith('.png')])
+            else:
+                missing.append(d)
+
+        borderless_path = os.path.join(overlays_dir, "borderless.png")
+        if not os.path.exists(borderless_path):
+            missing.append("borderless.png")
+
+        disk = shutil.disk_usage('.')
+        disk_free_gb = round(disk.free / (1024 ** 3), 1)
+        low_disk = disk_free_gb < 2.0
+
+        ready = len(missing) == 0 and not low_disk
+
+        return {
+            "ready": ready,
+            "asset_count": asset_count,
+            "disk_free_gb": disk_free_gb,
+            "missing": missing,
+            "detail": (
+                f"Low disk space: {disk_free_gb}GB" if low_disk
+                else f"Missing assets: {missing}" if missing
+                else f"{asset_count} frame assets ready"
+            )
+        }
+    except Exception as e:
+        logger.error(f"Print pipeline check error: {e}")
+        return {"ready": False, "detail": str(e), "asset_count": 0, "disk_free_gb": 0}
 
 # Camera Stream
 def generate_frames():
@@ -267,6 +395,40 @@ async def process_photos():
 class PrintRequest(BaseModel):
     copies: int = 1
 
+# ─────────────────────────────────────────────────────────────────────────────
+# THUMBNAIL UPLOAD — fires in background after each successful print
+# Sends a small 300px-wide JPEG to the hosted backend so the remote dashboard
+# can show a live print gallery (viewable from your phone anywhere).
+# ─────────────────────────────────────────────────────────────────────────────
+def _upload_print_thumbnail(image_path: str, session_id: str):
+    """Resize the 4x6 print to a 300px thumbnail and upload to hosted backend."""
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(image_path)
+        # Maintain aspect ratio, max width 300px
+        w, h = img.size
+        thumb_w = 300
+        thumb_h = int(h * thumb_w / w)
+        img = img.resize((thumb_w, thumb_h), PILImage.LANCZOS)
+        # Encode to JPEG in memory
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=75)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        # Upload
+        requests.post(
+            f"{HOSTED_BACKEND_URL}/upload_print",
+            json={
+                "kiosk_id": KIOSK_ID,
+                "thumbnail_b64": b64,
+                "timestamp": time.time(),
+                "session_id": session_id,
+            },
+            timeout=10
+        )
+        logger.info(f"Print thumbnail uploaded for session {session_id}")
+    except Exception as e:
+        logger.warning(f"Thumbnail upload failed (non-critical): {e}")
+
 @app.post("/print")
 async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     session = state_manager.get_state()
@@ -321,41 +483,99 @@ async def print_strip(request: PrintRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(printer.print_image, final_output_path, physical_copies, is_bw)
     return {"status": "printing_started", "copies": request.copies, "physical_prints": physical_copies}
 
-# --- Kiosk Heartbeat ---
-import asyncio
-import requests
-import platform
-import shutil
-
-# HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com" # Update with actual URL
-HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com" # Live URL
+# ─────────────────────────────────────────────────────────────────────────────
+# HEARTBEAT — sends full kiosk health to hosted cloud every 30 seconds
+# ─────────────────────────────────────────────────────────────────────────────
+HOSTED_BACKEND_URL = "https://polaris-hosted-backend.onrender.com"
+KIOSK_ID = os.getenv("KIOSK_ID", "polaris-001")
 
 async def heartbeat_loop():
+    """
+    Runs every 30 seconds in the background.
+    Sends camera, printer, disk, session state to the hosted backend.
+    This is what powers the remote dashboard (view from your phone anywhere).
+    """
+    await asyncio.sleep(10)  # Short initial delay so local services are fully ready
     while True:
         try:
-            # Gather Status
-            status = {
-                "camera": "OK" if camera.is_open else "DISCONNECTED",
-                "printer": "OK", # TODO: Implement actual printer check via win32print
-                "disk_space": f"{shutil.disk_usage('.').free // (1024**3)}GB",
-                "internet": "CONNECTED" # If this request succeeds, it's connected
-            }
-            
+            # --- Gather full health snapshot ---
+            session = state_manager.get_state()
+            session_step = "idle"
+            if session:
+                if len(session.photos) == 0:
+                    session_step = "options"
+                elif len(session.photos) < 4:
+                    session_step = f"capture_{len(session.photos)}_of_4"
+                elif session.is_printing:
+                    session_step = "printing"
+                else:
+                    session_step = "review"
+
+            # Printer checks
+            p_color = _check_printer("EPSON L3210 Series")
+            p_bw = _check_printer("EPSON L3210 BW")
+
+            # Disk
+            disk_free_gb = round(shutil.disk_usage('.').free / (1024 ** 3), 1)
+
+            # Count prints today
+            prints_today = 0
+            if os.path.exists(PRINTS_DIR):
+                from datetime import datetime, date
+                today = date.today()
+                for f in os.listdir(PRINTS_DIR):
+                    fp = os.path.join(PRINTS_DIR, f)
+                    if os.path.isfile(fp):
+                        mtime = datetime.fromtimestamp(os.stat(fp).st_mtime).date()
+                        if mtime == today:
+                            prints_today += 1
+
+            # Last print file
+            last_print = None
+            if os.path.exists(PRINTS_DIR):
+                print_files = sorted(
+                    [f for f in os.listdir(PRINTS_DIR) if f.endswith('_4x6.png')],
+                    key=lambda f: os.stat(os.path.join(PRINTS_DIR, f)).st_mtime,
+                    reverse=True
+                )
+                if print_files:
+                    last_print = f"prints/{print_files[0]}"
+
             payload = {
-                "kiosk_id": "polaris-001", # Unique ID per kiosk
-                "timestamp": str(time.time()),
+                "kiosk_id": KIOSK_ID,
+                "timestamp": time.time(),
                 "version": "1.0.0",
-                "status": status
+                "status": {
+                    "camera": "OK" if (camera.is_open and not camera.use_mock) else ("FALLBACK" if camera.use_mock else "DISCONNECTED"),
+                    "camera_name": camera.active_camera_name,
+                    "camera_mode": "stock_photo_fallback" if camera.use_mock else "live",
+                    "printer_color": "OK" if p_color["found"] else "OFFLINE",
+                    "printer_color_name": p_color.get("name") or "Not Found",
+                    "printer_bw": "OK" if p_bw["found"] else "OFFLINE",
+                    "printer_bw_name": p_bw.get("name") or "Not Found",
+                    "disk_free_gb": disk_free_gb,
+                    "internet": "CONNECTED",
+                    "session_active": session is not None,
+                    "session_step": session_step,
+                    "prints_today": prints_today,
+                    "last_print": last_print,
+                }
             }
-            
-            # Send Heartbeat
-            # requests.post(f"{HOSTED_BACKEND_URL}/heartbeat", json=payload, timeout=5)
-            # logger.info(f"Heartbeat sent: {status}")
-            
+
+            # Send to hosted backend
+            requests.post(
+                f"{HOSTED_BACKEND_URL}/heartbeat",
+                json=payload,
+                timeout=8
+            )
+            logger.info(f"Heartbeat sent: cam={payload['status']['camera']} | printer_color={payload['status']['printer_color']} | session={session_step} | prints_today={prints_today}")
+
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Heartbeat network error (kiosk still running): {e}")
         except Exception as e:
-            logger.error(f"Heartbeat failed: {e}")
-            
-        await asyncio.sleep(300) # Every 5 minutes
+            logger.error(f"Heartbeat error: {e}")
+
+        await asyncio.sleep(30)  # Every 30 seconds
 
 @app.on_event("startup")
 async def start_heartbeat():
